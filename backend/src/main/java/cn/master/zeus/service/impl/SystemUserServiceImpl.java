@@ -10,6 +10,7 @@ import cn.master.zeus.entity.SystemUser;
 import cn.master.zeus.entity.UserGroup;
 import cn.master.zeus.mapper.SystemUserMapper;
 import cn.master.zeus.mapper.UserGroupMapper;
+import cn.master.zeus.service.ISystemGroupService;
 import cn.master.zeus.service.ISystemUserService;
 import com.mybatisflex.core.paginate.Page;
 import com.mybatisflex.core.query.QueryChain;
@@ -22,6 +23,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Collections;
 import java.util.List;
 
 import static cn.master.zeus.entity.table.SystemGroupTableDef.SYSTEM_GROUP;
@@ -39,6 +41,7 @@ import static cn.master.zeus.entity.table.UserGroupTableDef.USER_GROUP;
 @RequiredArgsConstructor
 public class SystemUserServiceImpl extends ServiceImpl<SystemUserMapper, SystemUser> implements ISystemUserService {
     private final UserGroupMapper userGroupMapper;
+    private final ISystemGroupService systemGroupService;
 
     @Override
     public List<SystemUser> getMemberList(QueryMemberRequest request) {
@@ -65,7 +68,16 @@ public class SystemUserServiceImpl extends ServiceImpl<SystemUserMapper, SystemU
                                 .and(SYSTEM_USER.NAME.like(request.getName(), StringUtils.isNoneBlank(request.getName())))
                                 .orderBy(USER_GROUP.UPDATE_TIME.desc())
                 ).as("temp");
-        return mapper.paginate(Page.of(request.getPageNumber(), request.getPageSize()), query);
+        Page<SystemUser> paginate = mapper.paginate(Page.of(request.getPageNumber(), request.getPageSize()), query);
+        List<SystemUser> records = paginate.getRecords();
+        if (CollectionUtils.isNotEmpty(records)) {
+            records.forEach(u -> {
+                List<SystemGroup> groups = systemGroupService.getWorkspaceMemberGroups(request.getWorkspaceId(), u.getId());
+                groups.removeAll(Collections.singleton(null));
+                u.setGroups(groups);
+            });
+        }
+        return paginate;
     }
 
     @Override

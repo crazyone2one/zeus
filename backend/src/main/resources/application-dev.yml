@@ -21,3 +21,6 @@ security:
       expiration: 3600 # h
     refreshToken:
       expiration: 86400
+mybatis-flex:
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl

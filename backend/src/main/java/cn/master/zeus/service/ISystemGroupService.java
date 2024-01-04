@@ -15,4 +15,6 @@ import java.util.List;
 public interface ISystemGroupService extends IService<SystemGroup> {
 
     List<SystemGroup> getGroupsByType(GroupRequest request);
+
+    List<SystemGroup> getWorkspaceMemberGroups(String workspaceId, String userId);
 }

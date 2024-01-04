@@ -8,10 +8,14 @@ export interface IUser {
   email: string
   phone: string
   lastProjectId: string
+  projectId?: string
   lastWorkspaceId: string
+  workspaceId?: string
   status: boolean
   password?: string
   groups: Array<IGroup>
+  roleIds?: Array<string>
+  groupIds?: Array<string>
 }
 export interface IUserDto extends IUser {
   userGroups?: Array<IUserGroup>
