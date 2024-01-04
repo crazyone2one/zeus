@@ -15,4 +15,4 @@ Zeus code with spring boot and vue3
     * Initial Release
 ## License
 
-This project is licensed under the [MIT] License - see the LICENSE.md file for details
+This project is licensed under the [MIT](https://github.com/crazyone2one/zeus/blob/main/LICENSE) License - see the LICENSE.md file for details
