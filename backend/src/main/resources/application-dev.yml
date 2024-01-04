@@ -1,0 +1,23 @@
+spring:
+  application:
+    name: zeus
+  datasource:
+    url: jdbc:mysql://localhost:3306/zeus?characterEncoding=UTF-8&useInformationSchema=true
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    username: root
+    password: admin
+    # 连接池配置
+    druid:
+      max-active: 5
+    type: com.alibaba.druid.pool.DruidDataSource
+
+server:
+  port: 2024
+#  JWT Configuration
+security:
+  jwt:
+    secret-key: U2FsdGVkX18epMj+KK0TtMyZJzvr45zahWHKpl4+kSg=
+    accessToken:
+      expiration: 3600 # h
+    refreshToken:
+      expiration: 86400
