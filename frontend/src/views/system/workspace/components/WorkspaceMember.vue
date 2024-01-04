@@ -9,6 +9,7 @@ import { IUser, addWorkspaceMemberSpecial, getWorkspaceMemberPageSpecial } from 
 import { IWorkspace } from '/@/apis/modules/workspace-api'
 import NModalDialog from '/@/components/NModalDialog.vue'
 import NPagination from '/@/components/NPagination.vue'
+import NRolesTag from '/@/components/NRolesTag.vue'
 import NTableHeader from '/@/components/NTableHeader.vue'
 import NTableOperator from '/@/components/NTableOperator.vue'
 import { i18n } from '/@/i18n'
@@ -43,7 +44,10 @@ const columns: DataTableColumns<IUser> = [
   },
   {
     title: i18n.t('commons.group'),
-    key: 'description',
+    key: 'groups',
+    render(rowData) {
+      return h(NRolesTag, { roles: rowData.groups })
+    },
   },
   {
     title: i18n.t('commons.operating'),
