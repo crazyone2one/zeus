@@ -1,6 +1,7 @@
 import { SelectOption } from 'naive-ui'
 import { IProject } from './project-api'
 import { IWorkspace } from './workspace-api'
+import alovaInstance from '/@/plugins/alova'
 
 export interface IUserGroup {
   id: string
@@ -52,3 +53,6 @@ export interface IGroupResourceDto {
 interface IGroupPermissionDTO {
   permissions: Array<IGroupResourceDto>
 }
+
+export const getUserGroupList = (param: { type: string; resourceId: string; projectId: string }) =>
+  alovaInstance.Post<Array<IGroup>>(`/user/group/list`, param)
