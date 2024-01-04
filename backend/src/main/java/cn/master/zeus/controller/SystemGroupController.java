@@ -1,8 +1,10 @@
 package cn.master.zeus.controller;
 
+import cn.master.zeus.dto.request.GroupRequest;
 import cn.master.zeus.entity.SystemGroup;
 import cn.master.zeus.service.ISystemGroupService;
 import com.mybatisflex.core.paginate.Page;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -16,11 +18,11 @@ import java.util.List;
  * @since 1.0.0
  */
 @RestController
-@RequestMapping("/systemGroup")
+@RequestMapping("/user/group")
+@RequiredArgsConstructor
 public class SystemGroupController {
 
-    @Autowired
-    private ISystemGroupService iSystemGroupService;
+    private final ISystemGroupService iSystemGroupService;
 
     /**
      * 添加。
@@ -60,9 +62,9 @@ public class SystemGroupController {
      *
      * @return 所有数据
      */
-    @GetMapping("list")
-    public List<SystemGroup> list() {
-        return iSystemGroupService.list();
+    @PostMapping("list")
+    public List<SystemGroup> list(@RequestBody GroupRequest request) {
+        return iSystemGroupService.getGroupsByType(request);
     }
 
     /**

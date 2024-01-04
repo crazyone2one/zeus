@@ -1,9 +1,11 @@
 package cn.master.zeus.controller;
 
+import cn.master.zeus.dto.request.AddMemberRequest;
+import cn.master.zeus.dto.request.BaseRequest;
 import cn.master.zeus.entity.SystemUser;
 import cn.master.zeus.service.ISystemUserService;
 import com.mybatisflex.core.paginate.Page;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,11 +19,11 @@ import java.util.List;
  * @since 1.0.0
  */
 @RestController
-@RequestMapping("/system/user")
+@RequestMapping("/user")
+@RequiredArgsConstructor
 public class SystemUserController {
 
-    @Autowired
-    private ISystemUserService iSystemUserService;
+    private final ISystemUserService iSystemUserService;
 
     /**
      * 添加用户信息表。
@@ -63,7 +65,7 @@ public class SystemUserController {
      */
     @GetMapping("list")
     public List<SystemUser> list() {
-        return iSystemUserService.list();
+        return iSystemUserService.getUserList();
     }
 
     /**
@@ -83,7 +85,7 @@ public class SystemUserController {
      * @param page 分页对象
      * @return 分页对象
      */
-    @GetMapping("page")
+    @PostMapping("page")
     public Page<SystemUser> page(Page<SystemUser> page) {
         return iSystemUserService.page(page);
     }
@@ -91,5 +93,15 @@ public class SystemUserController {
     @GetMapping("getCurrentUser")
     public Object getCurrentUser(Authentication authentication) {
         return authentication.getPrincipal();
+    }
+
+    @PostMapping("/special/ws/member/list")
+    public Page<SystemUser> getMemberListByAdmin(@RequestBody BaseRequest request) {
+        return iSystemUserService.getMemberPage(request);
+    }
+
+    @PostMapping("/special/ws/member/add")
+    public void addMemberByAdmin(@RequestBody AddMemberRequest request) {
+        iSystemUserService.addMember(request);
     }
 }

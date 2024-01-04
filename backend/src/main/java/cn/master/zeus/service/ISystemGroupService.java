@@ -1,7 +1,10 @@
 package cn.master.zeus.service;
 
+import cn.master.zeus.dto.request.GroupRequest;
 import cn.master.zeus.entity.SystemGroup;
 import com.mybatisflex.core.service.IService;
+
+import java.util.List;
 
 /**
  *  服务层。
@@ -11,4 +14,5 @@ import com.mybatisflex.core.service.IService;
  */
 public interface ISystemGroupService extends IService<SystemGroup> {
 
+    List<SystemGroup> getGroupsByType(GroupRequest request);
 }

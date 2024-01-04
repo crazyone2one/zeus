@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { usePagination } from '@alova/scene-vue'
-import { DataTableColumns, DataTableRowKey } from 'naive-ui'
+import { DataTableColumns, DataTableRowKey, NButton } from 'naive-ui'
 import { computed, h, onMounted, reactive, ref } from 'vue'
 import EditWorkspace from './components/EditWorkspace.vue'
+import WorkspaceMember from './components/WorkspaceMember.vue'
 import { IPageResponse, IQueryParam } from '/@/apis/interface'
 import { IWorkspace, queryWsPage } from '/@/apis/modules/workspace-api'
 import NPagination from '/@/components/NPagination.vue'
@@ -12,6 +13,7 @@ import { i18n } from '/@/i18n'
 import { getCurrentWorkspaceId } from '/@/utils/token'
 
 const editWorkspace = ref<InstanceType<typeof EditWorkspace> | null>(null)
+const workspaceMember = ref<InstanceType<typeof WorkspaceMember> | null>(null)
 const condition = reactive<IQueryParam>({
   name: '',
   pageNumber: 1,
@@ -36,6 +38,9 @@ const columns: DataTableColumns<IWorkspace> = [
     key: 'memberSize',
     width: 150,
     align: 'center',
+    render(row) {
+      return h(NButton, { text: true, onClick: () => handleCellClick(row) }, { default: () => row.memberSize })
+    },
   },
   {
     title: i18n.t('commons.operating'),
@@ -100,6 +105,9 @@ const handleEdit = (val: IWorkspace) => {
 const handlePrevPage = (val: number) => {
   pageSize.value = val
 }
+const handleCellClick = (val: IWorkspace) => {
+  workspaceMember.value?.open(val)
+}
 onMounted(() => {
   loadTableData()
 })
@@ -121,6 +129,7 @@ onMounted(() => {
     </n-card>
   </n-spin>
   <edit-workspace ref="editWorkspace" @refresh="handleList" />
+  <workspace-member ref="workspaceMember" @refresh="handleList" />
 </template>
 
 <style scoped></style>
