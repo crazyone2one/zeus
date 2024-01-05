@@ -1,5 +1,6 @@
 package cn.master.zeus.service;
 
+import cn.master.zeus.dto.WorkspaceMemberDTO;
 import cn.master.zeus.dto.request.BaseRequest;
 import com.mybatisflex.core.paginate.Page;
 import com.mybatisflex.core.service.IService;
@@ -22,4 +23,6 @@ public interface IWorkspaceService extends IService<Workspace> {
     Workspace addWorkspaceByAdmin(Workspace workspace);
 
     int updateWorkspaceByAdmin(Workspace workspace);
+
+    void updateWorkspaceMember(WorkspaceMemberDTO memberDTO);
 }

@@ -8,6 +8,14 @@ export interface IWorkspace {
   description: string
   memberSize?: number
 }
+export interface IMember {
+  id: string
+  name: string
+  email: string
+  phone: string
+  groupIds: Array<string>
+  workspaceId: string
+}
 /**
  * workspace列表查询
  * @param page 当前页码
@@ -37,3 +45,9 @@ export const updateWorkspaceSpecial = (params: IWorkspace) => {
 }
 export const switchWorkspace = (wsId: string) => alovaInstance.Get<IUserDto>(`/user/switch/source/ws/${wsId}`)
 export const getWorkspaces = () => alovaInstance.Get<Array<IWorkspace>>('/workspace/list')
+/**
+ * 更新workspace下用户信息
+ * @param param user info param
+ * @returns
+ */
+export const updateWorkspaceMember = (param: IMember) => alovaInstance.Post(`/workspace/member/update`, param)

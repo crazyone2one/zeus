@@ -3,12 +3,15 @@ package cn.master.zeus.service.impl;
 import cn.master.zeus.common.constants.UserGroupConstants;
 import cn.master.zeus.common.exception.BusinessException;
 import cn.master.zeus.dto.RelatedSource;
+import cn.master.zeus.dto.WorkspaceMemberDTO;
 import cn.master.zeus.dto.request.BaseRequest;
 import cn.master.zeus.dto.request.QueryMemberRequest;
+import cn.master.zeus.entity.SystemGroup;
 import cn.master.zeus.entity.UserGroup;
 import cn.master.zeus.entity.Workspace;
 import cn.master.zeus.mapper.UserGroupMapper;
 import cn.master.zeus.mapper.WorkspaceMapper;
+import cn.master.zeus.service.ISystemGroupService;
 import cn.master.zeus.service.ISystemUserService;
 import cn.master.zeus.service.IWorkspaceService;
 import cn.master.zeus.util.SessionUtils;
@@ -40,6 +43,7 @@ import static cn.master.zeus.entity.table.WorkspaceTableDef.WORKSPACE;
 public class WorkspaceServiceImpl extends ServiceImpl<WorkspaceMapper, Workspace> implements IWorkspaceService {
     private final ISystemUserService systemUserService;
     private final UserGroupMapper userGroupMapper;
+    private final ISystemGroupService systemGroupService;
 
     @Override
     public Page<Workspace> getWorkspacePage(BaseRequest request) {
@@ -96,6 +100,34 @@ public class WorkspaceServiceImpl extends ServiceImpl<WorkspaceMapper, Workspace
     public int updateWorkspaceByAdmin(Workspace workspace) {
         checkWorkspace(workspace);
         return mapper.update(workspace);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void updateWorkspaceMember(WorkspaceMemberDTO memberDTO) {
+        String workspaceId = memberDTO.getWorkspaceId();
+        String userId = memberDTO.getId();
+        // 已有角色
+        List<SystemGroup> memberGroups = systemGroupService.getWorkspaceMemberGroups(workspaceId, userId);
+        // 修改后的角色
+        List<String> groups = memberDTO.getGroupIds();
+        List<String> allGroupIds = new ArrayList<>(memberGroups.stream().map(SystemGroup::getId).toList());
+        // 更新用户时添加了角色
+        groups.forEach(g -> {
+            if (checkSourceRole(workspaceId, userId, g) == 0) {
+                UserGroup userGroup = UserGroup.builder().userId(userId).groupId(g).sourceId(workspaceId).build();
+                userGroupMapper.insert(userGroup);
+            }
+        });
+        allGroupIds.removeAll(groups);
+        if (!allGroupIds.isEmpty()) {
+            userGroupMapper.deleteByQuery(QueryChain.of(UserGroup.class)
+                    .where(USER_GROUP.USER_ID.eq(userId).and(USER_GROUP.SOURCE_ID.eq(workspaceId)).and(USER_GROUP.GROUP_ID.in(allGroupIds))));
+        }
+    }
+
+    private long checkSourceRole(String workspaceId, String userId, String roleId) {
+        return systemGroupService.checkSourceRole(workspaceId, userId, roleId);
     }
 
     private void checkWorkspace(Workspace workspace) {
