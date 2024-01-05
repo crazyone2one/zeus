@@ -1,8 +1,6 @@
 package cn.master.zeus.common.response;
 
-import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 /**
  * @author Created by 11's papa on 01/03/2024
@@ -10,7 +8,7 @@ import lombok.NoArgsConstructor;
 @Data
 public class ResultHolder {
     // 请求是否成功
-    private boolean success = false;
+    private boolean success;
     // 描述信息
     private String message;
     // 返回数据

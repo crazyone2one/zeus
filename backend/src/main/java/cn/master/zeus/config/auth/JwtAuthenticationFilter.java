@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.lang.NonNull;
+import org.springframework.security.authentication.CredentialsExpiredException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -42,9 +43,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         try {
             username = jwtProvider.extractUserName(jwt);
         } catch (ExpiredJwtException e) {
-            log.warn("the token is expired and not valid anymore", e);
-            request.setAttribute("exception", e);
-            throw e;
+            log.error("Expired JWT token.", e);
+            //HANDLE IT HERE::::: wrap ExpiredJwtException in AuthenticationException and rethrow Exception
+            throw new CredentialsExpiredException("Expired jwt credentials ", e);
         }
         //username = jwtProvider.extractUserName(jwt);
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
