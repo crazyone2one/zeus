@@ -4,6 +4,7 @@ import cn.master.zeus.common.response.ResultHolder;
 import io.jsonwebtoken.ExpiredJwtException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.jdbc.BadSqlGrammarException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -32,6 +33,18 @@ public class RestResponseExceptionHandler {
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     @ExceptionHandler(BusinessException.class)
     public ResultHolder handleBusinessException(BusinessException ex) {
+        return ResultHolder.error(ex.getMessage());
+    }
+
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    @ExceptionHandler(BadSqlGrammarException.class)
+    public ResultHolder handleBadSqlGrammarException(BadSqlGrammarException ex) {
+        return ResultHolder.error("数据库操作异常");
+    }
+
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    @ExceptionHandler(Exception.class)
+    public ResultHolder handleException(Exception ex) {
         return ResultHolder.error(ex.getMessage());
     }
 }
