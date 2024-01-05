@@ -3,6 +3,7 @@ package cn.master.zeus.service.impl;
 import cn.master.zeus.common.constants.UserGroupType;
 import cn.master.zeus.dto.request.GroupRequest;
 import cn.master.zeus.entity.SystemGroup;
+import cn.master.zeus.entity.UserGroup;
 import cn.master.zeus.mapper.SystemGroupMapper;
 import cn.master.zeus.service.ISystemGroupService;
 import com.mybatisflex.core.query.QueryChain;
@@ -45,5 +46,10 @@ public class SystemGroupServiceImpl extends ServiceImpl<SystemGroupMapper, Syste
                 .join(SYSTEM_GROUP).on(SYSTEM_GROUP.ID.eq(USER_GROUP.GROUP_ID))
                 .where(WORKSPACE.ID.eq(workspaceId).and(USER_GROUP.USER_ID.eq(userId)));
         return mapper.selectListByQueryAs(queryChain, SystemGroup.class);
+    }
+
+    @Override
+    public long checkSourceRole(String sourceId, String userId, String groupId) {
+        return QueryChain.of(UserGroup.class).where(USER_GROUP.USER_ID.eq(userId).and(USER_GROUP.SOURCE_ID.eq(sourceId)).and(USER_GROUP.GROUP_ID.eq(groupId))).count();
     }
 }

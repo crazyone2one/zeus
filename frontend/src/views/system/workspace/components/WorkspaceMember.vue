@@ -4,6 +4,7 @@ import { useRequest } from 'alova'
 import { DataTableColumns, DataTableRowKey } from 'naive-ui'
 import { h, reactive, ref } from 'vue'
 import AddMember from './AddMember.vue'
+import EditWorkspaceMember from './EditWorkspaceMember.vue'
 import { IPageResponse, IQueryParam } from '/@/apis/interface'
 import { IUser, addWorkspaceMemberSpecial, getWorkspaceMemberPageSpecial } from '/@/apis/modules/user-api'
 import { IWorkspace } from '/@/apis/modules/workspace-api'
@@ -17,6 +18,7 @@ import { GROUP_TYPE } from '/@/utils/constants'
 
 const modalDialog = ref<InstanceType<typeof NModalDialog> | null>(null)
 const addMember = ref<InstanceType<typeof AddMember> | null>(null)
+const editWorkspaceMember = ref<InstanceType<typeof EditWorkspaceMember> | null>(null)
 const condition = reactive<IQueryParam>({
   name: '',
   pageNumber: 1,
@@ -120,9 +122,17 @@ const open = (row: IWorkspace): void => {
 const handleAddMember = () => {
   addMember.value?.open()
 }
+/**
+ * 编辑用户信息
+ * @param row 用户信息
+ */
 const handleEdit = (row: IUser) => {
-  window.$message.info(row.name)
+  editWorkspaceMember.value?.open(row)
 }
+/**
+ * 移除用户
+ * @param row 用户信息
+ */
 const handleDelete = (row: IUser) => {
   window.$message.info(row.name)
 }
@@ -157,6 +167,7 @@ defineExpose({ open })
     </n-modal-dialog>
   </n-spin>
   <add-member ref="addMember" :group-type="GROUP_TYPE.WORKSPACE" :group-scope-id="groupScopeId" @submit="_addMember" />
+  <edit-workspace-member ref="editWorkspaceMember" :group-scope-id="groupScopeId" @refresh="loadTableData" />
 </template>
 
 <style scoped></style>
