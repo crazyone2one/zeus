@@ -1,6 +1,7 @@
 package cn.master.zeus.controller;
 
 import cn.master.zeus.dto.WorkspaceMemberDTO;
+import cn.master.zeus.dto.WorkspaceResource;
 import cn.master.zeus.dto.request.BaseRequest;
 import cn.master.zeus.util.SessionUtils;
 import com.mybatisflex.core.paginate.Page;
@@ -97,5 +98,9 @@ public class WorkspaceController {
     @PostMapping("/member/update")
     public void updateOrgMember(@RequestBody WorkspaceMemberDTO memberDTO) {
         iWorkspaceService.updateWorkspaceMember(memberDTO);
+    }
+    @GetMapping("/list/resource/{groupId}/{type}")
+    public WorkspaceResource listResource(@PathVariable String groupId, @PathVariable String type) {
+        return iWorkspaceService.listResource(groupId, type);
     }
 }

@@ -1,4 +1,4 @@
-import { IPageResponse, IQueryParam } from '../interface'
+import { IPageResponse, IQueryParam, IWorkspaceResource } from '../interface'
 import { IUserDto } from './user-api'
 import alovaInstance from '/@/plugins/alova'
 
@@ -51,3 +51,6 @@ export const getWorkspaces = () => alovaInstance.Get<Array<IWorkspace>>('/worksp
  * @returns
  */
 export const updateWorkspaceMember = (param: IMember) => alovaInstance.Post(`/workspace/member/update`, param)
+
+export const getGroupResource = (groupId: string, groupType: string) =>
+  alovaInstance.Get<IWorkspaceResource>(`/workspace/list/resource/${groupId}/${groupType}`)

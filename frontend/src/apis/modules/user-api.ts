@@ -42,3 +42,12 @@ export const getUserListByResourceUrl = (url: string) => alovaInstance.Get<Array
  */
 export const addWorkspaceMemberSpecial = (param: { userIds: Array<string>; groupIds: Array<string> }) =>
   alovaInstance.Post(`/user/special/ws/member/add`, param)
+
+export const specialListUsers = (page: number, pageSize: number, params: IQueryParam) => {
+  params.pageNumber = page
+  params.pageSize = pageSize
+  return alovaInstance.Post<IPageResponse<IUser>>('/user/special/page', params)
+}
+
+export const specialCreateUser = (user: IUser) => alovaInstance.Post(`/user/special/save`, user)
+export const specialModifyUser = (user: IUser) => alovaInstance.Post(`/user/special/update`, user)

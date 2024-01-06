@@ -3,6 +3,8 @@ package cn.master.zeus.service;
 import cn.master.zeus.dto.request.AddMemberRequest;
 import cn.master.zeus.dto.request.BaseRequest;
 import cn.master.zeus.dto.request.QueryMemberRequest;
+import cn.master.zeus.dto.request.user.SystemUserDTO;
+import cn.master.zeus.dto.request.user.UserRequest;
 import cn.master.zeus.entity.SystemUser;
 import com.mybatisflex.core.paginate.Page;
 import com.mybatisflex.core.service.IService;
@@ -19,9 +21,15 @@ public interface ISystemUserService extends IService<SystemUser> {
 
     List<SystemUser> getMemberList(QueryMemberRequest queryMemberRequest);
 
-    Page<SystemUser> getMemberPage(BaseRequest request);
+    Page<SystemUserDTO> getMemberPage(BaseRequest request);
 
     List<SystemUser> getUserList();
 
     void addMember(AddMemberRequest request);
+
+    Page<SystemUserDTO> getUserPageList(UserRequest request);
+
+    void updateUserRole(cn.master.zeus.dto.request.member.UserRequest user);
+
+    int insert(cn.master.zeus.dto.request.member.UserRequest systemUser);
 }

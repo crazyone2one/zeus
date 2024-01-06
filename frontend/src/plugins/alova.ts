@@ -2,6 +2,7 @@ import { createServerTokenAuthentication } from '@alova/scene-vue'
 import { createAlova } from 'alova'
 import GlobalFetch from 'alova/GlobalFetch'
 import VueHook from 'alova/vue'
+import router from '../router'
 import { useAuthStore } from '../store/modules/auth-store'
 import { getCurrentProjectId, getCurrentWorkspaceId } from '../utils/token'
 import { refreshUserToken } from '/@/apis/modules/auth-api'
@@ -50,12 +51,31 @@ const alovaInstance = createAlova({
       //...响应成功拦截器
       // 当使用GlobalFetch请求适配器时，第一个参数接收Response对象
       // 第二个参数为当前请求的method实例，你可以用它同步请求前后的配置信息
-      // TODO: 401重新登录系统
-      // if (response.status >= 400) {
-      //   console.log(`output->response`, response)
-      //   throw new Error(response.statusText)
-      // }
       const json = await response.json()
+      // refresh token 接口返回401表示token过期，需要重新登录
+      if (response.status === 401 && method.url.concat('api/auth/refresh')) {
+        window.$dialog.warning({
+          title: '警告',
+          content: '认证失败，重新登录',
+          positiveText: '确定',
+          negativeText: '不确定',
+          onPositiveClick: () => {
+            useAuthStore().resetAuth()
+            const route = router.currentRoute
+            router.push(
+              `/login?redirect=${route.value.path}&params=${JSON.stringify(
+                route.value.query ? route.value.query : route.value.params,
+              )}`,
+            )
+          },
+          onNegativeClick: () => {
+            window.$message.error('不确定')
+          },
+        })
+      }
+      if (response.status === 403) {
+        window.$message.warning(json.message)
+      }
       if (response.status !== 200) throw new Error(json.message)
       if (!json.success) {
         // 抛出错误或返回reject状态的Promise实例时，此请求将抛出错误

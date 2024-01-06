@@ -73,10 +73,10 @@ const menuOptions: MenuOption[] = [
         label: i18n.t('commons.system'),
         key: 'people',
         children: [
-          // {
-          //   label: () => h(RouterLink, { to: { name: 'user' } }, { default: () => i18n.t('commons.user') }),
-          //   key: '/setting/user',
-          // },
+          {
+            label: () => h(RouterLink, { to: { name: 'user' } }, { default: () => i18n.t('commons.user') }),
+            key: '/setting/user',
+          },
           {
             label: () => h(RouterLink, { to: { name: 'workspace' } }, { default: () => i18n.t('commons.workspace') }),
             key: '/setting/workspace',

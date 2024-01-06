@@ -1,15 +1,15 @@
 import { RouteRecordRaw } from 'vue-router'
 const Setting: Array<RouteRecordRaw> = [
-  //   {
-  //     path: '/setting/user',
-  //     name: 'user',
-  //     component: () => import(`/@/views/setting/user/index.vue`),
-  //     meta: {
-  //       title: 'commons.user',
-  //       permissions: ['SYSTEM_USER:READ'],
-  //       system: true,
-  //     },
-  //   },
+  {
+    path: '/setting/user',
+    name: 'user',
+    component: () => import(`/@/views/system/user/index.vue`),
+    meta: {
+      title: 'commons.user',
+      permissions: ['SYSTEM_USER:READ'],
+      system: true,
+    },
+  },
   {
     path: '/setting/workspace',
     name: 'workspace',
