@@ -1,3 +1,6 @@
+import { IProject } from '../modules/project-api'
+import { IWorkspace } from '../modules/workspace-api'
+
 // mybatis-flex分页查询返回类型
 export interface IPageResponse<T> {
   empty?: boolean
@@ -29,4 +32,9 @@ export interface IQueryMemberRequest {
   name: string
   workspaceId: string
   projectId: string
+}
+
+export interface IWorkspaceResource {
+  workspaces: Array<IWorkspace>
+  projects: Array<IProject>
 }

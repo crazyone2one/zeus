@@ -1,11 +1,14 @@
 package cn.master.zeus.service.impl;
 
 import cn.master.zeus.common.constants.UserGroupConstants;
+import cn.master.zeus.common.constants.UserGroupType;
 import cn.master.zeus.common.exception.BusinessException;
 import cn.master.zeus.dto.RelatedSource;
 import cn.master.zeus.dto.WorkspaceMemberDTO;
+import cn.master.zeus.dto.WorkspaceResource;
 import cn.master.zeus.dto.request.BaseRequest;
 import cn.master.zeus.dto.request.QueryMemberRequest;
+import cn.master.zeus.entity.Project;
 import cn.master.zeus.entity.SystemGroup;
 import cn.master.zeus.entity.UserGroup;
 import cn.master.zeus.entity.Workspace;
@@ -22,13 +25,16 @@ import com.mybatisflex.spring.service.impl.ServiceImpl;
 import lombok.RequiredArgsConstructor;
 import lombok.val;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import static cn.master.zeus.entity.table.ProjectTableDef.PROJECT;
+import static cn.master.zeus.entity.table.SystemGroupTableDef.SYSTEM_GROUP;
 import static cn.master.zeus.entity.table.UserGroupTableDef.USER_GROUP;
 import static cn.master.zeus.entity.table.WorkspaceTableDef.WORKSPACE;
 
@@ -44,6 +50,8 @@ public class WorkspaceServiceImpl extends ServiceImpl<WorkspaceMapper, Workspace
     private final ISystemUserService systemUserService;
     private final UserGroupMapper userGroupMapper;
     private final ISystemGroupService systemGroupService;
+
+    private static final String GLOBAL = "global";
 
     @Override
     public Page<Workspace> getWorkspacePage(BaseRequest request) {
@@ -124,6 +132,46 @@ public class WorkspaceServiceImpl extends ServiceImpl<WorkspaceMapper, Workspace
             userGroupMapper.deleteByQuery(QueryChain.of(UserGroup.class)
                     .where(USER_GROUP.USER_ID.eq(userId).and(USER_GROUP.SOURCE_ID.eq(workspaceId)).and(USER_GROUP.GROUP_ID.in(allGroupIds))));
         }
+    }
+
+    @Override
+    public WorkspaceResource listResource(String groupId, String type) {
+        SystemGroup group = QueryChain.of(SystemGroup.class).where(SYSTEM_GROUP.ID.eq(groupId)).one();
+        WorkspaceResource resource = new WorkspaceResource();
+        if (group == null) {
+            return resource;
+        }
+        if (StringUtils.equals(UserGroupType.WORKSPACE, type)) {
+            resource.setWorkspaces(getWorkspaceGroupResource(group.getScopeId()));
+        }
+        if (StringUtils.equals(UserGroupType.PROJECT, type)) {
+            resource.setProjects(getProjectGroupResource(group.getScopeId()));
+        }
+        return resource;
+    }
+
+    private List<Project> getProjectGroupResource(String scopeId) {
+        if (StringUtils.equals(scopeId, GLOBAL)) {
+            return QueryChain.of(Project.class).list();
+        }
+        Workspace workspace = QueryChain.of(Workspace.class).where(WORKSPACE.ID.eq(scopeId)).one();
+        if (Objects.nonNull(workspace)) {
+            return QueryChain.of(Project.class)
+                    .where(PROJECT.WORKSPACE_ID.eq(workspace.getId()))
+                    .list();
+        }
+        Project project = QueryChain.of(Project.class).where(PROJECT.ID.eq(scopeId)).one();
+        List<Project> list = new ArrayList<>();
+        if (project != null) {
+            list.add(project);
+        }
+        return list;
+    }
+
+    private List<Workspace> getWorkspaceGroupResource(String scopeId) {
+        return QueryChain.of(Workspace.class)
+                .where(WORKSPACE.ID.eq(scopeId).when(!StringUtils.equals(scopeId, GLOBAL)))
+                .list();
     }
 
     private long checkSourceRole(String workspaceId, String userId, String roleId) {

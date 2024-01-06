@@ -1,17 +1,23 @@
-import { defineStore } from "pinia";
+import { defineStore } from 'pinia'
 interface IState {
-  accessToken: string;
-  refreshToken: string;
-  userId: string;
+  accessToken: string
+  refreshToken: string
+  userId: string
 }
-export const useAuthStore = defineStore("auth", {
+export const useAuthStore = defineStore('auth', {
   state: (): IState => {
     return {
-      accessToken: "",
-      refreshToken: "",
-      userId: "",
-    };
+      accessToken: '',
+      refreshToken: '',
+      userId: '',
+    }
   },
-
+  actions: {
+    resetAuth() {
+      this.accessToken = ''
+      this.refreshToken = ''
+      this.userId = ''
+    },
+  },
   persist: true,
-});
+})

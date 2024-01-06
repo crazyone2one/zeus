@@ -56,3 +56,7 @@ interface IGroupPermissionDTO {
 
 export const getUserGroupList = (param: { type: string; resourceId: string; projectId: string }) =>
   alovaInstance.Post<Array<IGroup>>(`/user/group/list`, param)
+
+export const getUserAllGroups = (userId: string) => alovaInstance.Get<Array<IGroup>>(`/user/group/all/${userId}`)
+export const getAllUserGroupByType = (param: { type: string }) =>
+  alovaInstance.Post<Array<IGroup>>(`/user/group/get`, param)

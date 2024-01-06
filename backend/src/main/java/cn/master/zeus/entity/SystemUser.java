@@ -3,6 +3,8 @@ package cn.master.zeus.entity;
 import com.mybatisflex.annotation.Column;
 import com.mybatisflex.annotation.Id;
 import com.mybatisflex.annotation.Table;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -10,7 +12,6 @@ import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
-import java.util.List;
 
 /**
  * 用户信息表 实体类。
@@ -39,6 +40,8 @@ public class SystemUser implements Serializable {
     /**
      * E-Mail address
      */
+    @Valid
+    @NotBlank
     private String email;
 
     /**
@@ -86,6 +89,6 @@ public class SystemUser implements Serializable {
 
     private Boolean delFlag;
 
-    @Column(ignore = true)
-    private List<SystemGroup> groups;
+    //@Column(ignore = true)
+    //private List<SystemGroup> groups;
 }
