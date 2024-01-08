@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { NLayout, NLayoutFooter, NLayoutHeader } from 'naive-ui'
+import HeaderWorkspace from './components/header/HeaderWorkspace.vue'
 import UserMenu from './components/header/UserMenu.vue'
 import sidebar from './components/sidebar/index.vue'
 import { useClientHeight } from '/@/composables/client-height'
 import Logo from '/@/layout/components/logo/index.vue'
+
 const { height } = useClientHeight()
 </script>
 <template>
@@ -16,6 +18,7 @@ const { height } = useClientHeight()
       <logo />
       <div style="display: flex; align-items: center"></div>
       <div class="nav-end">
+        <header-workspace />
         <user-menu />
       </div>
     </n-layout-header>

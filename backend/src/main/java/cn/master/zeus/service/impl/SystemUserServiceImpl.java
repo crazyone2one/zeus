@@ -2,17 +2,22 @@ package cn.master.zeus.service.impl;
 
 import cn.master.zeus.common.constants.UserGroupType;
 import cn.master.zeus.common.exception.BusinessException;
+import cn.master.zeus.dto.UserDTO;
+import cn.master.zeus.dto.UserGroupPermissionDTO;
 import cn.master.zeus.dto.request.AddMemberRequest;
 import cn.master.zeus.dto.request.BaseRequest;
 import cn.master.zeus.dto.request.QueryMemberRequest;
 import cn.master.zeus.dto.request.user.SystemUserDTO;
 import cn.master.zeus.dto.request.user.UserRequest;
+import cn.master.zeus.entity.Project;
 import cn.master.zeus.entity.SystemGroup;
 import cn.master.zeus.entity.SystemUser;
 import cn.master.zeus.entity.UserGroup;
 import cn.master.zeus.mapper.SystemUserMapper;
 import cn.master.zeus.mapper.UserGroupMapper;
 import cn.master.zeus.service.ISystemUserService;
+import cn.master.zeus.service.IUserGroupPermissionService;
+import cn.master.zeus.util.SessionUtils;
 import com.mybatisflex.core.paginate.Page;
 import com.mybatisflex.core.query.QueryChain;
 import com.mybatisflex.core.query.QueryWrapper;
@@ -26,10 +31,12 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import static cn.master.zeus.entity.table.ProjectTableDef.PROJECT;
 import static cn.master.zeus.entity.table.SystemGroupTableDef.SYSTEM_GROUP;
 import static cn.master.zeus.entity.table.SystemUserTableDef.SYSTEM_USER;
 import static cn.master.zeus.entity.table.UserGroupTableDef.USER_GROUP;
@@ -47,6 +54,7 @@ import static cn.master.zeus.entity.table.WorkspaceTableDef.WORKSPACE;
 public class SystemUserServiceImpl extends ServiceImpl<SystemUserMapper, SystemUser> implements ISystemUserService {
     private final UserGroupMapper userGroupMapper;
     private final PasswordEncoder passwordEncoder;
+    private final IUserGroupPermissionService userGroupPermissionService;
 
     @Override
     public List<SystemUser> getMemberList(QueryMemberRequest request) {
@@ -157,6 +165,62 @@ public class SystemUserServiceImpl extends ServiceImpl<SystemUserMapper, SystemU
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         checkEmailIsExist(user.getEmail());
         return mapper.insert(user);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public UserDTO switchUserResource(String sign, String sourceId) {
+        String userId = SessionUtils.getUserId();
+        UserDTO user = getUserDTO(userId);
+        SystemUser newUser = new SystemUser();
+        boolean superUser = userGroupMapper.isSuperUser(userId);
+        if (StringUtils.equals("workspace", sign)) {
+            user.setLastWorkspaceId(sourceId);
+            user.setLastProjectId(StringUtils.EMPTY);
+            List<Project> projects = getProjectListByWsAndUserId(userId, sourceId);
+            if (CollectionUtils.isNotEmpty(projects)) {
+                user.setLastProjectId(projects.get(0).getId());
+            } else {
+                if (superUser) {
+                    List<Project> allWsProject = QueryChain.of(Project.class).where(PROJECT.WORKSPACE_ID.eq(sourceId)).list();
+                    if (CollectionUtils.isNotEmpty(allWsProject)) {
+                        user.setLastProjectId(allWsProject.get(0).getId());
+                    }
+                } else {
+                    user.setLastProjectId(StringUtils.EMPTY);
+                }
+            }
+        }
+        BeanUtils.copyProperties(user, newUser);
+        mapper.update(newUser);
+        return getUserDTO(userId);
+    }
+
+    private List<Project> getProjectListByWsAndUserId(String userId, String workspaceId) {
+        List<Project> projects = QueryChain.of(Project.class).where(PROJECT.WORKSPACE_ID.eq(workspaceId)).list();
+        List<UserGroup> userGroups = QueryChain.of(UserGroup.class).where(USER_GROUP.USER_ID.eq(userId)).list();
+        List<Project> projectList = new ArrayList<>();
+        userGroups.forEach(userGroup -> projects.forEach(project -> {
+            if (StringUtils.equals(userGroup.getSourceId(), project.getId())) {
+                if (!projectList.contains(project)) {
+                    projectList.add(project);
+                }
+            }
+        }));
+        return projectList;
+    }
+
+    @Override
+    public UserDTO getUserDTO(String userId) {
+        UserGroupPermissionDTO userGroupPermission = userGroupPermissionService.getUserGroupPermission(userId);
+        SystemUser user = mapper.selectOneById(userId);
+        UserDTO userDTO = new UserDTO();
+        BeanUtils.copyProperties(user, userDTO);
+        // 设置其他属性
+        userDTO.setUserGroups(userGroupPermission.getUserGroups());
+        userDTO.setGroups(userGroupPermission.getGroups());
+        userDTO.setGroupPermissions(userGroupPermission.getList());
+        return userDTO;
     }
 
     private void checkEmailIsExist(String email) {

@@ -1,5 +1,6 @@
 package cn.master.zeus.controller;
 
+import cn.master.zeus.dto.UserDTO;
 import cn.master.zeus.dto.request.AddMemberRequest;
 import cn.master.zeus.dto.request.BaseRequest;
 import cn.master.zeus.dto.request.user.SystemUserDTO;
@@ -112,5 +113,10 @@ public class SystemUserController {
     @PostMapping("/special/update")
     public void update(@RequestBody cn.master.zeus.dto.request.member.UserRequest user) {
         iSystemUserService.updateUserRole(user);
+    }
+
+    @GetMapping("/switch/source/ws/{sourceId}")
+    public UserDTO switchWorkspace(@PathVariable(value = "sourceId") String sourceId) {
+        return iSystemUserService.switchUserResource("workspace", sourceId);
     }
 }
