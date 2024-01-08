@@ -1,5 +1,6 @@
 package cn.master.zeus.service;
 
+import cn.master.zeus.dto.UserDTO;
 import cn.master.zeus.dto.request.AddMemberRequest;
 import cn.master.zeus.dto.request.BaseRequest;
 import cn.master.zeus.dto.request.QueryMemberRequest;
@@ -32,4 +33,8 @@ public interface ISystemUserService extends IService<SystemUser> {
     void updateUserRole(cn.master.zeus.dto.request.member.UserRequest user);
 
     int insert(cn.master.zeus.dto.request.member.UserRequest systemUser);
+
+    UserDTO switchUserResource(String sign, String sourceId);
+
+    UserDTO getUserDTO(String userId);
 }

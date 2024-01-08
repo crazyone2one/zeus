@@ -95,10 +95,12 @@ public class WorkspaceController {
     public List<Workspace> listUserWorkspace() {
         return iWorkspaceService.getWorkspaceListByUserId(SessionUtils.getUserId());
     }
+
     @PostMapping("/member/update")
     public void updateOrgMember(@RequestBody WorkspaceMemberDTO memberDTO) {
         iWorkspaceService.updateWorkspaceMember(memberDTO);
     }
+
     @GetMapping("/list/resource/{groupId}/{type}")
     public WorkspaceResource listResource(@PathVariable String groupId, @PathVariable String type) {
         return iWorkspaceService.listResource(groupId, type);

@@ -1,53 +1,57 @@
-import { defineStore } from "pinia";
-import { ref } from "vue";
-import { IUserDto } from "/@/apis/modules/user-api";
+import { defineStore } from 'pinia'
+import { ref } from 'vue'
+import { IUserDto } from '/@/apis/modules/user-api'
 
 // You can name the return value of `defineStore()` anything you want,
 // but it's best to use the name of the store and surround it with `use`
 // and `Store` (e.g. `useUserStore`, `useCartStore`, `useProductStore`)
 // the first argument is a unique id of the store across your application
 export const useUserStore = defineStore(
-  "user",
+  'user',
   () => {
-    const user = ref<IUserDto>({} as IUserDto);
+    const user = ref<IUserDto>({} as IUserDto)
     const saveSessionStorage = (user: IUserDto): void => {
       // 校验权限
       user.userGroups?.forEach((ug) => {
         user.groupPermissions?.forEach((gp) => {
           if (gp.group.id === ug.groupId) {
-            ug.userGroupPermissions = gp.userGroupPermissions;
-            ug.group = gp.group;
+            ug.userGroupPermissions = gp.userGroupPermissions
+            ug.group = gp.group
           }
-        });
-      });
+        })
+      })
       // 检查当前项目有没有权限
-      const currentProjectId = sessionStorage.getItem("project_id");
+      const currentProjectId = sessionStorage.getItem('project_id')
       if (!currentProjectId) {
-        sessionStorage.setItem("project_id", user.lastProjectId);
+        sessionStorage.setItem('project_id', user.lastProjectId)
       } else {
         const v = user.userGroups
-          ?.filter((ug) => ug.group && ug.group.type === "PROJECT")
-          .filter((ug) => ug.sourceId === currentProjectId);
-        const index = user.groups?.findIndex((g) => g.id === "super_group");
+          ?.filter((ug) => ug.group && ug.group.type === 'PROJECT')
+          .filter((ug) => ug.sourceId === currentProjectId)
+        const index = user.groups?.findIndex((g) => g.id === 'super_group')
         if (v?.length === 0 && index === -1) {
-          sessionStorage.setItem("project_id", user.lastProjectId);
+          sessionStorage.setItem('project_id', user.lastProjectId)
         }
       }
-      if (!sessionStorage.getItem("workspace_id")) {
-        sessionStorage.setItem("workspace_id", user.lastWorkspaceId);
+      if (!sessionStorage.getItem('workspace_id')) {
+        sessionStorage.setItem('workspace_id', user.lastWorkspaceId)
       }
-    };
+    }
     const clearSessionStorage = (): void => {
-      sessionStorage.removeItem("workspace_id");
-      sessionStorage.removeItem("project_id");
-      sessionStorage.removeItem("workspace_name");
-      sessionStorage.removeItem("project_name");
-    };
+      sessionStorage.removeItem('workspace_id')
+      sessionStorage.removeItem('project_id')
+      sessionStorage.removeItem('workspace_name')
+      sessionStorage.removeItem('project_name')
+    }
     const initUser = () => {
-      user.value = {} as IUserDto;
-      clearSessionStorage();
-    };
-    return { user, saveSessionStorage, initUser };
+      user.value = {} as IUserDto
+      clearSessionStorage()
+    }
+    const switchWorkspace = (resp: IUserDto) => {
+      sessionStorage.setItem('workspace_id', resp.lastWorkspaceId)
+      sessionStorage.setItem('project_id', resp.lastProjectId)
+    }
+    return { user, saveSessionStorage, initUser, switchWorkspace }
   },
-  { persist: true }
-);
+  { persist: true },
+)
