@@ -1,5 +1,7 @@
 package cn.master.zeus.controller;
 
+import cn.master.zeus.dto.GroupDTO;
+import cn.master.zeus.dto.GroupPermissionDTO;
 import cn.master.zeus.dto.request.GroupRequest;
 import cn.master.zeus.dto.request.group.EditGroupRequest;
 import cn.master.zeus.entity.SystemGroup;
@@ -28,12 +30,12 @@ public class SystemGroupController {
     /**
      * 添加。
      *
-     * @param systemGroup
+     * @param request
      * @return {@code true} 添加成功，{@code false} 添加失败
      */
     @PostMapping("save")
-    public boolean save(@RequestBody SystemGroup systemGroup) {
-        return iSystemGroupService.save(systemGroup);
+    public SystemGroup save(@RequestBody EditGroupRequest request) {
+        return iSystemGroupService.addGroup(request);
     }
 
     /**
@@ -43,19 +45,19 @@ public class SystemGroupController {
      * @return {@code true} 删除成功，{@code false} 删除失败
      */
     @DeleteMapping("remove/{id}")
-    public boolean remove(@PathVariable Serializable id) {
-        return iSystemGroupService.removeById(id);
+    public void remove(@PathVariable String id) {
+        iSystemGroupService.deleteGroup(id);
     }
 
     /**
      * 根据主键更新。
      *
-     * @param systemGroup
+     * @param request
      * @return {@code true} 更新成功，{@code false} 更新失败
      */
-    @PutMapping("update")
-    public boolean update(@RequestBody SystemGroup systemGroup) {
-        return iSystemGroupService.updateById(systemGroup);
+    @PostMapping("update")
+    public void update(@RequestBody EditGroupRequest request) {
+        iSystemGroupService.editGroup(request);
     }
 
     /**
@@ -82,12 +84,12 @@ public class SystemGroupController {
     /**
      * 分页查询。
      *
-     * @param page 分页对象
+     * @param request 分页对象
      * @return 分页对象
      */
-    @GetMapping("page")
-    public Page<SystemGroup> page(Page<SystemGroup> page) {
-        return iSystemGroupService.page(page);
+    @PostMapping("page")
+    public Page<GroupDTO> page(@RequestBody EditGroupRequest request) {
+        return iSystemGroupService.getGroupPage(request);
     }
 
     @GetMapping("/all/{userId}")
@@ -100,4 +102,12 @@ public class SystemGroupController {
         return iSystemGroupService.getGroupByType(request);
     }
 
+    @PostMapping("/permission")
+    public GroupPermissionDTO getGroupResource(@RequestBody SystemGroup group) {
+        return iSystemGroupService.getGroupResource(group);
+    }
+    @PostMapping("/permission/edit")
+    public void editGroupPermission(@RequestBody EditGroupRequest editGroupRequest) {
+        iSystemGroupService.editGroupPermission(editGroupRequest);
+    }
 }

@@ -1,5 +1,6 @@
 package cn.master.zeus.entity;
 
+import com.mybatisflex.annotation.Column;
 import com.mybatisflex.annotation.Id;
 import com.mybatisflex.annotation.Table;
 import java.io.Serializable;
@@ -97,5 +98,8 @@ public class Project implements Serializable {
     private String createUser;
 
     private String systemId;
+
+    @Column(ignore = true)
+    private long memberSize;
 
 }

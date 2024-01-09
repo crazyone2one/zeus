@@ -1,4 +1,5 @@
 import { SelectOption } from 'naive-ui'
+import { IPageResponse, IQueryParam } from '../interface'
 import { IProject } from './project-api'
 import { IWorkspace } from './workspace-api'
 import alovaInstance from '/@/plugins/alova'
@@ -26,6 +27,8 @@ export interface IGroup {
   projectOptions?: Array<SelectOption>
   projects?: Array<IProject>
   showSearchGetMore?: boolean
+  memberSize?: number
+  scopeName?: string
 }
 export interface IGroupResource {
   id: string
@@ -60,3 +63,20 @@ export const getUserGroupList = (param: { type: string; resourceId: string; proj
 export const getUserAllGroups = (userId: string) => alovaInstance.Get<Array<IGroup>>(`/user/group/all/${userId}`)
 export const getAllUserGroupByType = (param: { type: string }) =>
   alovaInstance.Post<Array<IGroup>>(`/user/group/get`, param)
+/**
+ * 列表数据查询
+ * @param page
+ * @param pageSize
+ * @param params
+ * @returns
+ */
+export const getUserGroupPages = (page: number, pageSize: number, params: IQueryParam) => {
+  params.pageNumber = page
+  params.pageSize = pageSize
+  return alovaInstance.Post<IPageResponse<IGroup>>('/user/group/page', params)
+}
+
+export const getUserGroupPermission = (param: IGroup) => alovaInstance.Post(`/user/group/permission`, param)
+export const createUserGroup = (param: IGroup) => alovaInstance.Post(`/user/group/save`, param)
+export const modifyUserGroup = (param: IGroup) => alovaInstance.Post(`/user/group/update`, param)
+export const modifyUserGroupPermission = (param: IGroup) => alovaInstance.Post(`/user/group/permission/edit`, param)

@@ -26,26 +26,26 @@ const Setting: Array<RouteRecordRaw> = [
   //     component: () => import(`/@/views/setting/organization/index.vue`),
   //     meta: { title: "organization", requiresAuth: true },
   //   },
-  //     {
-  //       path: "/setting/usergroup",
-  //       name: "usergroup",
-  //       component: () => import(`/@/views/setting/group/index.vue`),
-  //       meta: {
-  //         title: "group.group_permission",
-  //         permissions: ["SYSTEM_GROUP:READ"],
-  //         system: true,
-  //       },
-  //     },
+  {
+    path: '/setting/usergroup',
+    name: 'usergroup',
+    component: () => import(`/@/views/system/group/index.vue`),
+    meta: {
+      title: 'group.group_permission',
+      permissions: ['SYSTEM_GROUP:READ'],
+      system: true,
+    },
+  },
 
-  //   {
-  //     path: '/project/:type',
-  //     name: 'project',
-  //     component: () => import(`/@/views/setting/project/index.vue`),
-  //     meta: {
-  //       title: 'project.manager',
-  //       permissions: ['WORKSPACE_PROJECT_MANAGER:READ'],
-  //       workspace: true,
-  //     },
-  //   },
+  {
+    path: '/project/:type',
+    name: 'project',
+    component: () => import(`/@/views/system/project/index.vue`),
+    meta: {
+      title: 'project.manager',
+      permissions: ['WORKSPACE_PROJECT_MANAGER:READ'],
+      workspace: true,
+    },
+  },
 ]
 export default Setting

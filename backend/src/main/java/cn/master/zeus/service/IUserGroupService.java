@@ -1,7 +1,10 @@
 package cn.master.zeus.service;
 
+import cn.master.zeus.dto.UserGroupDTO;
 import cn.master.zeus.entity.UserGroup;
 import com.mybatisflex.core.service.IService;
+
+import java.util.List;
 
 /**
  *  服务层。
@@ -11,4 +14,5 @@ import com.mybatisflex.core.service.IService;
  */
 public interface IUserGroupService extends IService<UserGroup> {
 
+    List<UserGroupDTO> getUserGroup(String userId, String projectId);
 }

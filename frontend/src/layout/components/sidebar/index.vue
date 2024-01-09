@@ -81,11 +81,11 @@ const menuOptions: MenuOption[] = [
             label: () => h(RouterLink, { to: { name: 'workspace' } }, { default: () => i18n.t('commons.workspace') }),
             key: '/setting/workspace',
           },
-          // {
-          //   label: () =>
-          //     h(RouterLink, { to: { name: 'usergroup' } }, { default: () => i18n.t('group.group_permission') }),
-          //   key: '/setting/usergroup',
-          // },
+          {
+            label: () =>
+              h(RouterLink, { to: { name: 'usergroup' } }, { default: () => i18n.t('group.group_permission') }),
+            key: '/setting/usergroup',
+          },
         ],
       },
       {
@@ -93,20 +93,20 @@ const menuOptions: MenuOption[] = [
         label: i18n.t('commons.workspace'),
         key: 'people',
         children: [
-          // {
-          //   label: () =>
-          //     h(
-          //       RouterLink,
-          //       {
-          //         to: {
-          //           name: 'project',
-          //           params: { type: 'all' },
-          //         },
-          //       },
-          //       { default: () => i18n.t('project.manager') },
-          //     ),
-          //   key: '/setting/project/all',
-          // },
+          {
+            label: () =>
+              h(
+                RouterLink,
+                {
+                  to: {
+                    name: 'project',
+                    params: { type: 'all' },
+                  },
+                },
+                { default: () => i18n.t('project.manager') },
+              ),
+            key: '/setting/project/all',
+          },
         ],
       },
     ],

@@ -1,64 +1,61 @@
 package cn.master.zeus.controller;
 
-import com.mybatisflex.core.paginate.Page;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.beans.factory.annotation.Autowired;
+import cn.master.zeus.dto.WorkspaceMemberDTO;
+import cn.master.zeus.dto.request.project.ProjectRequest;
 import cn.master.zeus.entity.Project;
 import cn.master.zeus.service.IProjectService;
-import org.springframework.web.bind.annotation.RestController;
+import cn.master.zeus.util.SessionUtils;
+import com.mybatisflex.core.paginate.Page;
+import lombok.RequiredArgsConstructor;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.web.bind.annotation.*;
+
 import java.io.Serializable;
 import java.util.List;
 
 /**
- *  控制层。
+ * 控制层。
  *
  * @author 11's papa
  * @since 1.0.0
  */
 @RestController
 @RequestMapping("/project")
+@RequiredArgsConstructor
 public class ProjectController {
 
-    @Autowired
-    private IProjectService iProjectService;
+    private final IProjectService iProjectService;
 
     /**
      * 添加。
      *
-     * @param project 
+     * @param project
      * @return {@code true} 添加成功，{@code false} 添加失败
      */
     @PostMapping("save")
-    public boolean save(@RequestBody Project project) {
-        return iProjectService.save(project);
+    public Project save(@RequestBody Project project) {
+        return iProjectService.addProject(project);
     }
 
     /**
      * 根据主键删除。
      *
      * @param id 主键
-     * @return {@code true} 删除成功，{@code false} 删除失败
      */
     @DeleteMapping("remove/{id}")
-    public boolean remove(@PathVariable Serializable id) {
-        return iProjectService.removeById(id);
+    public void remove(@PathVariable String id) {
+        iProjectService.deleteProject(id);
     }
 
     /**
      * 根据主键更新。
      *
-     * @param project 
+     * @param project
      * @return {@code true} 更新成功，{@code false} 更新失败
      */
     @PutMapping("update")
-    public boolean update(@RequestBody Project project) {
-        return iProjectService.updateById(project);
+    public void update(@RequestBody Project project) {
+        iProjectService.updateProject(project);
     }
 
     /**
@@ -85,12 +82,32 @@ public class ProjectController {
     /**
      * 分页查询。
      *
-     * @param page 分页对象
+     * @param request 分页对象
      * @return 分页对象
      */
-    @GetMapping("page")
-    public Page<Project> page(Page<Project> page) {
-        return iProjectService.page(page);
+    @PostMapping("page")
+    public Page<Project> page(@RequestBody ProjectRequest request) {
+        if (StringUtils.isBlank(request.getWorkspaceId())) {
+            return new Page<>();
+        }
+        return iProjectService.getProjectPage(request);
     }
 
+    @GetMapping("/member/size/{id}")
+    public long getProjectMemberSize(@PathVariable String id) {
+        return iProjectService.getProjectMemberSize(id);
+    }
+
+    @PostMapping("/member/update")
+    public void updateMember(@RequestBody WorkspaceMemberDTO memberDTO) {
+        iProjectService.updateMember(memberDTO);
+    }
+
+    @GetMapping("/list/all/{workspaceId}")
+    public List<Project> listAll(@PathVariable String workspaceId) {
+        //String currentWorkspaceId = SessionUtils.getCurrentWorkspaceId();
+        ProjectRequest request = new ProjectRequest();
+        request.setWorkspaceId(workspaceId);
+        return iProjectService.getProjectList(request);
+    }
 }
