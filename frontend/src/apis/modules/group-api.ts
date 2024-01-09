@@ -76,7 +76,8 @@ export const getUserGroupPages = (page: number, pageSize: number, params: IQuery
   return alovaInstance.Post<IPageResponse<IGroup>>('/user/group/page', params)
 }
 
-export const getUserGroupPermission = (param: IGroup) => alovaInstance.Post(`/user/group/permission`, param)
+export const getUserGroupPermission = (param: IGroup) =>
+  alovaInstance.Post<IGroupPermissionDTO>(`/user/group/permission`, param)
 export const createUserGroup = (param: IGroup) => alovaInstance.Post(`/user/group/save`, param)
 export const modifyUserGroup = (param: IGroup) => alovaInstance.Post(`/user/group/update`, param)
 export const modifyUserGroupPermission = (param: IGroup) => alovaInstance.Post(`/user/group/permission/edit`, param)

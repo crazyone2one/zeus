@@ -89,7 +89,6 @@ const initWorkspace = (scopeId: string | undefined) => {
         )
       }
     }
-    console.log(`output->workspaceOptions.value `, workspaceOptions.value)
   })
 }
 const open = (_type: string, _title: string, row?: IGroup): void => {

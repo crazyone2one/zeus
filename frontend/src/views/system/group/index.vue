@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { usePagination } from '@alova/scene-vue'
 import { DataTableColumns, DataTableRowKey } from 'naive-ui'
-import { computed, h, onMounted, reactive, ref } from 'vue'
+import { h, onMounted, reactive, ref, withDirectives } from 'vue'
+import EditPermission from './components/EditPermission.vue'
 import EditUserGroup from './components/EditUserGroup.vue'
 import { IPageResponse, IQueryParam } from '/@/apis/interface'
 import { IGroup, getUserGroupPages } from '/@/apis/modules/group-api'
@@ -9,10 +10,11 @@ import NPagination from '/@/components/NPagination.vue'
 import NTableHeader from '/@/components/NTableHeader.vue'
 import NTableOperator from '/@/components/NTableOperator.vue'
 import NTableOperatorButton from '/@/components/NTableOperatorButton.vue'
+import permission from '/@/directive/permission'
 import { i18n } from '/@/i18n'
-import { getCurrentWorkspaceId } from '/@/utils/token'
 
 const editUserGroup = ref<InstanceType<typeof EditUserGroup> | null>(null)
+const editPermission = ref<InstanceType<typeof EditPermission> | null>(null)
 const condition = reactive<IQueryParam>({
   name: '',
   pageNumber: 1,
@@ -52,21 +54,18 @@ const columns: DataTableColumns<IGroup> = [
         NTableOperator,
         {
           onEditClick: () => handleEdit(row),
-          editPermission: ['SYSTEM_USER:READ+EDIT'],
-          deletePermission: ['SYSTEM_USER:READ+DELETE'],
-          showDelete: workspaceId.value !== row.id,
+          editPermission: ['SYSTEM_GROUP:READ+EDIT'],
+          deletePermission: ['SYSTEM_GROUP:READ+DELETE'],
         },
         {
-          behind: () => {
-            return h(
-              NTableOperatorButton,
-              {
-                tip: i18n.t('member.edit_password'),
-                icon: 'i-carbon:password',
-                type: 'success',
-                permission: ['SYSTEM_USER:READ+EDIT_PASSWORD'],
-              },
-              {},
+          middle: () => {
+            return withDirectives(
+              h(
+                NTableOperatorButton,
+                { tip: i18n.t('group.set_permission'), icon: 'i-carbon:tools', onExec: () => setPermission(row) },
+                {},
+              ),
+              [[permission, ['SYSTEM_GROUP:READ+SETTING_PERMISSION']]],
             )
           },
         },
@@ -75,9 +74,9 @@ const columns: DataTableColumns<IGroup> = [
   },
 ]
 const rowKey = (row: IGroup) => row.id
-const workspaceId = computed(() => {
-  return getCurrentWorkspaceId()
-})
+const setPermission = (row: IGroup) => {
+  editPermission.value?.open(row)
+}
 const checkedRowKeysRef = ref<DataTableRowKey[]>([])
 const handleCheck = (rowKeys: DataTableRowKey[]) => (checkedRowKeysRef.value = rowKeys)
 
@@ -143,6 +142,7 @@ onMounted(() => {
     </n-card>
   </n-spin>
   <edit-user-group ref="editUserGroup" @refresh="handleList" />
+  <edit-permission ref="editPermission" />
 </template>
 
 <style scoped></style>
