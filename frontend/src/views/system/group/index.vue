@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { usePagination } from '@alova/scene-vue'
-import { DataTableColumns, DataTableRowKey } from 'naive-ui'
-import { h, onMounted, reactive, ref, withDirectives } from 'vue'
+import { DataTableColumns, DataTableRowKey, NButton } from 'naive-ui'
+import { computed, h, onMounted, reactive, ref, withDirectives } from 'vue'
 import EditPermission from './components/EditPermission.vue'
 import EditUserGroup from './components/EditUserGroup.vue'
+import GroupMember from './components/GroupMember.vue'
 import { IPageResponse, IQueryParam } from '/@/apis/interface'
 import { IGroup, getUserGroupPages } from '/@/apis/modules/group-api'
 import NPagination from '/@/components/NPagination.vue'
@@ -12,9 +13,11 @@ import NTableOperator from '/@/components/NTableOperator.vue'
 import NTableOperatorButton from '/@/components/NTableOperatorButton.vue'
 import permission from '/@/directive/permission'
 import { i18n } from '/@/i18n'
+import { USER_GROUP_SCOPE } from '/@/utils/table-constants'
 
 const editUserGroup = ref<InstanceType<typeof EditUserGroup> | null>(null)
 const editPermission = ref<InstanceType<typeof EditPermission> | null>(null)
+const groupMember = ref<InstanceType<typeof GroupMember> | null>(null)
 const condition = reactive<IQueryParam>({
   name: '',
   pageNumber: 1,
@@ -27,21 +30,62 @@ const columns: DataTableColumns<IGroup> = [
   {
     title: i18n.t('commons.name'),
     key: 'name',
-    maxWidth: 200,
+    ellipsis: {
+      tooltip: true,
+    },
   },
   {
     title: i18n.t('group.type'),
     key: 'type',
+    render(row) {
+      return h(
+        'span',
+        {},
+        {
+          default: () => {
+            return userGroupType.value[row.type] ? i18n.t(userGroupType.value[row.type]) : row.type
+          },
+        },
+      )
+    },
   },
   {
     title: i18n.t('commons.member'),
     key: 'memberSize',
     align: 'center',
+    width: 100,
+    render(row) {
+      return h(NButton, { text: true, onClick: () => memberClick(row) }, { default: () => row.memberSize })
+    },
   },
   {
     title: i18n.t('group.scope'),
     key: 'scopeName',
     align: 'center',
+    render(rowData) {
+      return h(
+        'span',
+        {},
+        {
+          default: () => {
+            if (rowData.scopeId === 'global') {
+              return i18n.t('group.global')
+            } else if (rowData.scopeId === 'system') {
+              return i18n.t('group.system')
+            } else {
+              return rowData.scopeName
+            }
+          },
+        },
+      )
+    },
+  },
+  {
+    title: i18n.t('group.description'),
+    key: 'description',
+    ellipsis: {
+      tooltip: true,
+    },
   },
   {
     title: i18n.t('commons.operating'),
@@ -73,6 +117,9 @@ const columns: DataTableColumns<IGroup> = [
     },
   },
 ]
+const userGroupType = computed(() => {
+  return USER_GROUP_SCOPE
+})
 const rowKey = (row: IGroup) => row.id
 const setPermission = (row: IGroup) => {
   editPermission.value?.open(row)
@@ -121,6 +168,9 @@ const handleEdit = (row: IGroup) => {
 const handlePrevPage = (val: number) => {
   pageSize.value = val
 }
+const memberClick = (row: IGroup) => {
+  groupMember.value?.open(row)
+}
 onMounted(() => {
   handleList()
 })
@@ -143,6 +193,7 @@ onMounted(() => {
   </n-spin>
   <edit-user-group ref="editUserGroup" @refresh="handleList" />
   <edit-permission ref="editPermission" />
+  <group-member ref="groupMember" />
 </template>
 
 <style scoped></style>

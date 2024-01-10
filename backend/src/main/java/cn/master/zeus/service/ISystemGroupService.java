@@ -4,7 +4,9 @@ import cn.master.zeus.dto.GroupDTO;
 import cn.master.zeus.dto.GroupPermissionDTO;
 import cn.master.zeus.dto.request.GroupRequest;
 import cn.master.zeus.dto.request.group.EditGroupRequest;
+import cn.master.zeus.dto.request.group.EditGroupUserRequest;
 import cn.master.zeus.entity.SystemGroup;
+import cn.master.zeus.entity.SystemUser;
 import com.mybatisflex.core.paginate.Page;
 import com.mybatisflex.core.service.IService;
 
@@ -43,4 +45,12 @@ public interface ISystemGroupService extends IService<SystemGroup> {
     GroupPermissionDTO getGroupResource(SystemGroup group);
 
     void editGroupPermission(EditGroupRequest editGroupRequest);
+
+    Page<SystemUser> getGroupUser(EditGroupRequest request);
+
+    void addGroupUser(EditGroupUserRequest request);
+
+    void editGroupUser(EditGroupUserRequest request);
+
+    void removeGroupMember(String userId, String groupId);
 }

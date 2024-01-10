@@ -1,6 +1,7 @@
 import { SelectOption } from 'naive-ui'
 import { IPageResponse, IQueryParam } from '../interface'
 import { IProject } from './project-api'
+import { IUser } from './user-api'
 import { IWorkspace } from './workspace-api'
 import alovaInstance from '/@/plugins/alova'
 
@@ -81,3 +82,9 @@ export const getUserGroupPermission = (param: IGroup) =>
 export const createUserGroup = (param: IGroup) => alovaInstance.Post(`/user/group/save`, param)
 export const modifyUserGroup = (param: IGroup) => alovaInstance.Post(`/user/group/update`, param)
 export const modifyUserGroupPermission = (param: IGroup) => alovaInstance.Post(`/user/group/permission/edit`, param)
+
+export const getUserGroupByResourceUrlAndPage = (page: number, pageSize: number, params: IQueryParam) => {
+  params.pageNumber = page
+  params.pageSize = pageSize
+  return alovaInstance.Post<IPageResponse<IUser>>('/user/group/user', params)
+}

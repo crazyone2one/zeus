@@ -6,10 +6,14 @@ import cn.master.zeus.common.exception.BusinessException;
 import cn.master.zeus.dto.*;
 import cn.master.zeus.dto.request.GroupRequest;
 import cn.master.zeus.dto.request.group.EditGroupRequest;
+import cn.master.zeus.dto.request.group.EditGroupUserRequest;
 import cn.master.zeus.entity.*;
 import cn.master.zeus.mapper.SystemGroupMapper;
+import cn.master.zeus.mapper.SystemUserMapper;
+import cn.master.zeus.mapper.UserGroupMapper;
 import cn.master.zeus.mapper.UserGroupPermissionMapper;
 import cn.master.zeus.service.ISystemGroupService;
+import cn.master.zeus.service.IUserGroupPermissionService;
 import cn.master.zeus.service.IUserGroupService;
 import cn.master.zeus.util.JsonUtils;
 import cn.master.zeus.util.SessionUtils;
@@ -17,6 +21,7 @@ import com.mybatisflex.core.paginate.Page;
 import com.mybatisflex.core.query.QueryChain;
 import com.mybatisflex.spring.service.impl.ServiceImpl;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -29,6 +34,7 @@ import java.util.stream.Collectors;
 
 import static cn.master.zeus.entity.table.ProjectTableDef.PROJECT;
 import static cn.master.zeus.entity.table.SystemGroupTableDef.SYSTEM_GROUP;
+import static cn.master.zeus.entity.table.SystemUserTableDef.SYSTEM_USER;
 import static cn.master.zeus.entity.table.UserGroupPermissionTableDef.USER_GROUP_PERMISSION;
 import static cn.master.zeus.entity.table.UserGroupTableDef.USER_GROUP;
 import static cn.master.zeus.entity.table.WorkspaceTableDef.WORKSPACE;
@@ -40,13 +46,17 @@ import static com.mybatisflex.core.query.QueryMethods.distinct;
  * @author 11's papa
  * @since 1.0.0
  */
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class SystemGroupServiceImpl extends ServiceImpl<SystemGroupMapper, SystemGroup> implements ISystemGroupService {
     private static final String GLOBAL = "global";
     private final IUserGroupService userGroupService;
+    private final UserGroupMapper userGroupMapper;
     private final UserGroupPermissionMapper userGroupPermissionMapper;
+    private final IUserGroupPermissionService userGroupPermissionService;
     final StringRedisTemplate stringRedisTemplate;
+    private final SystemUserMapper systemUserMapper;
 
     private static final Map<String, List<String>> MAP = new HashMap<>(4) {{
         put(UserGroupType.SYSTEM, Arrays.asList(UserGroupType.SYSTEM, UserGroupType.WORKSPACE, UserGroupType.PROJECT));
@@ -207,7 +217,7 @@ public class SystemGroupServiceImpl extends ServiceImpl<SystemGroupMapper, Syste
                 .where(USER_GROUP_PERMISSION.GROUP_ID.eq(request.getUserGroupId()));
         userGroupPermissionMapper.deleteByQuery(userGroupPermissionQueryChain);
         String groupId = request.getUserGroupId();
-        permissions.forEach(permission->{
+        permissions.forEach(permission -> {
             if (BooleanUtils.isTrue(permission.getChecked())) {
                 String permissionId = permission.getId();
                 String resourceId = permission.getResourceId();
@@ -215,6 +225,103 @@ public class SystemGroupServiceImpl extends ServiceImpl<SystemGroupMapper, Syste
                 userGroupPermissionMapper.insert(build);
             }
         });
+    }
+
+    @Override
+    public Page<SystemUser> getGroupUser(EditGroupRequest request) {
+        QueryChain<SystemUser> queryChain = QueryChain.of(SystemUser.class).select(distinct(SYSTEM_USER.ID, SYSTEM_USER.NAME, SYSTEM_USER.EMAIL))
+                .join(USER_GROUP).on(USER_GROUP.USER_ID.eq(SYSTEM_USER.ID))
+                .where(USER_GROUP.GROUP_ID.eq(request.getUserGroupId())
+                        .and(SYSTEM_USER.NAME.like(request.getName()))
+                        .and(USER_GROUP.SOURCE_ID.eq(request.getProjectId())))
+                .orderBy(USER_GROUP.UPDATE_TIME.desc());
+        return systemUserMapper.paginate(Page.of(request.getPageNumber(), request.getPageSize()), queryChain);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void addGroupUser(EditGroupUserRequest request) {
+        if (StringUtils.isBlank(request.getGroupId()) || CollectionUtils.isEmpty(request.getUserIds())) {
+            log.info("add group user warning, please check param!");
+            return;
+        }
+        SystemGroup group = mapper.selectOneById(request.getGroupId());
+        if (group == null) {
+            log.info("add group user warning, group is null. group id: " + request.getGroupId());
+            return;
+        }
+        if (StringUtils.equals(group.getType(), UserGroupType.SYSTEM)) {
+            UserGroupPermissionDTO userGroupPermission = userGroupPermissionService.getUserGroupPermission(SessionUtils.getUserId());
+            long count = userGroupPermission.getGroups().stream().filter(g -> StringUtils.equals(g.getType(), UserGroupType.SYSTEM)).count();
+            if (count > 0) {
+                addSystemGroupUser(group, request.getUserIds());
+            } else {
+                log.warn("no permission to add system group!");
+            }
+        } else {
+            if (CollectionUtils.isNotEmpty(request.getSourceIds())) {
+                addNotSystemGroupUser(group, request.getUserIds(), request.getSourceIds());
+            }
+        }
+    }
+
+    private void addNotSystemGroupUser(SystemGroup group, List<String> userIds, List<String> sourceIds) {
+        for (String userId : userIds) {
+            SystemUser user = systemUserMapper.selectOneById(userId);
+            if (Objects.isNull(user)) {
+                continue;
+            }
+            List<UserGroup> userGroups = QueryChain.of(UserGroup.class).where(USER_GROUP.USER_ID.eq(userId).and(USER_GROUP.GROUP_ID.eq(group.getId()))).list();
+            List<String> existSourceIds = userGroups.stream().map(UserGroup::getSourceId).toList();
+            List<String> toAddSourceIds = new ArrayList<>(sourceIds);
+            toAddSourceIds.removeAll(existSourceIds);
+            toAddSourceIds.forEach(s -> {
+                UserGroup userGroup = UserGroup.builder().userId(userId).groupId(group.getId()).sourceId(s).build();
+                userGroupMapper.insert(userGroup);
+            });
+        }
+    }
+
+    private void addSystemGroupUser(SystemGroup group, List<String> userIds) {
+        for (String userId : userIds) {
+            SystemUser user = systemUserMapper.selectOneById(userId);
+            if (Objects.isNull(user)) {
+                continue;
+            }
+            List<UserGroup> userGroups = QueryChain.of(UserGroup.class).where(USER_GROUP.USER_ID.eq(userId).and(USER_GROUP.GROUP_ID.eq(group.getId()))).list();
+            if (CollectionUtils.isEmpty(userGroups)) {
+                UserGroup userGroup = UserGroup.builder().userId(userId).groupId(group.getId()).sourceId("system").build();
+                userGroupMapper.insert(userGroup);
+            }
+        }
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void editGroupUser(EditGroupUserRequest request) {
+        String groupId = request.getGroupId();
+        SystemGroup group = mapper.selectOneById(groupId);
+        if (!StringUtils.equals(group.getType(), UserGroupType.SYSTEM)) {
+            List<String> userIds = request.getUserIds();
+            if (CollectionUtils.isNotEmpty(userIds)) {
+                // 编辑单个用户
+                String userId = userIds.get(0);
+                List<String> sourceIds = request.getSourceIds();
+                QueryChain<UserGroup> userGroupQueryChain = QueryChain.of(UserGroup.class).where(USER_GROUP.USER_ID.eq(userId).and(USER_GROUP.GROUP_ID.eq(groupId)));
+                userGroupMapper.deleteByQuery(userGroupQueryChain);
+                sourceIds.forEach(s -> {
+                    UserGroup userGroup = UserGroup.builder().userId(userId).groupId(groupId).sourceId(s).build();
+                    userGroupMapper.insert(userGroup);
+                });
+            }
+        }
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void removeGroupMember(String userId, String groupId) {
+        QueryChain<UserGroup> userGroupQueryChain = QueryChain.of(UserGroup.class).where(USER_GROUP.GROUP_ID.eq(groupId).and(USER_GROUP.USER_ID.eq(userId)));
+        userGroupMapper.deleteByQuery(userGroupQueryChain);
     }
 
     private List<GroupResourceDTO> getResourcePermission(List<GroupResource> resources, List<GroupPermission> permissions, SystemGroup group, List<String> permissionList) {

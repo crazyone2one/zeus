@@ -4,7 +4,9 @@ import cn.master.zeus.dto.GroupDTO;
 import cn.master.zeus.dto.GroupPermissionDTO;
 import cn.master.zeus.dto.request.GroupRequest;
 import cn.master.zeus.dto.request.group.EditGroupRequest;
+import cn.master.zeus.dto.request.group.EditGroupUserRequest;
 import cn.master.zeus.entity.SystemGroup;
+import cn.master.zeus.entity.SystemUser;
 import cn.master.zeus.service.ISystemGroupService;
 import com.mybatisflex.core.paginate.Page;
 import lombok.RequiredArgsConstructor;
@@ -106,8 +108,29 @@ public class SystemGroupController {
     public GroupPermissionDTO getGroupResource(@RequestBody SystemGroup group) {
         return iSystemGroupService.getGroupResource(group);
     }
+
     @PostMapping("/permission/edit")
     public void editGroupPermission(@RequestBody EditGroupRequest editGroupRequest) {
         iSystemGroupService.editGroupPermission(editGroupRequest);
+    }
+
+    @PostMapping("/user")
+    public Page<SystemUser> getGroupUser(@RequestBody EditGroupRequest editGroupRequest) {
+        return iSystemGroupService.getGroupUser(editGroupRequest);
+    }
+
+    @PostMapping("/add/member")
+    public void addGroupUser(@RequestBody EditGroupUserRequest request) {
+        iSystemGroupService.addGroupUser(request);
+    }
+
+    @PostMapping("/edit/member")
+    public void editGroupUser(@RequestBody EditGroupUserRequest request) {
+        iSystemGroupService.editGroupUser(request);
+    }
+
+    @GetMapping("/rm/{userId}/{groupId}")
+    public void removeGroupMember(@PathVariable("userId") String userId, @PathVariable("groupId") String groupId) {
+        iSystemGroupService.removeGroupMember(userId, groupId);
     }
 }
