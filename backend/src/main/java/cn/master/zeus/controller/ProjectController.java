@@ -3,6 +3,7 @@ package cn.master.zeus.controller;
 import cn.master.zeus.dto.WorkspaceMemberDTO;
 import cn.master.zeus.dto.request.project.ProjectRequest;
 import cn.master.zeus.entity.Project;
+import cn.master.zeus.entity.SystemUser;
 import cn.master.zeus.service.IProjectService;
 import cn.master.zeus.util.SessionUtils;
 import com.mybatisflex.core.paginate.Page;
@@ -109,5 +110,12 @@ public class ProjectController {
         ProjectRequest request = new ProjectRequest();
         request.setWorkspaceId(workspaceId);
         return iProjectService.getProjectList(request);
+    }
+
+    @PostMapping("/list/related")
+    public List<Project> listRelated(@RequestBody ProjectRequest request) {
+        // 仅支持查询当前用户的项目
+        request.setUserId(SessionUtils.getUserId());
+        return iProjectService.getUserProject(request);
     }
 }

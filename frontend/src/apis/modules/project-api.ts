@@ -31,3 +31,6 @@ export const modifyProject = (params: IProject) => {
 }
 
 export const getProjectList = () => alovaInstance.Get<Array<IProject>>(`/project/list`)
+
+export const getUserProjectList = (param: { userId: string; workspaceId: string }) =>
+  alovaInstance.Post<Array<IProject>>(`/project/list/related`, param)

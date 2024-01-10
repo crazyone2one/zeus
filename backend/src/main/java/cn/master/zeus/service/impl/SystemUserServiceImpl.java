@@ -223,6 +223,28 @@ public class SystemUserServiceImpl extends ServiceImpl<SystemUserMapper, SystemU
         return userDTO;
     }
 
+    @Override
+    public Page<SystemUserDTO> getProjectMemberPage(BaseRequest request) {
+        QueryWrapper wrapper = new QueryWrapper();
+        QueryWrapper query = new QueryWrapper()
+                .select("distinct *").from(
+                        wrapper.select(SYSTEM_USER.ALL_COLUMNS)
+                                .from(USER_GROUP).join(SYSTEM_USER).on(USER_GROUP.USER_ID.eq(SYSTEM_USER.ID))
+                                .where(USER_GROUP.SOURCE_ID.eq(request.getProjectId()))
+                                .orderBy(USER_GROUP.UPDATE_TIME.desc())
+                ).as("temp");
+        Page<SystemUserDTO> paginate = mapper.paginateAs(Page.of(request.getPageNumber(), request.getPageSize()), query,SystemUserDTO.class);
+        List<SystemUserDTO> records = paginate.getRecords();
+        if (CollectionUtils.isNotEmpty(records)) {
+            records.forEach(u -> {
+                List<SystemGroup> groups = getWorkspaceMemberGroups(request.getWorkspaceId(), u.getId());
+                groups.removeAll(Collections.singleton(null));
+                u.setGroups(groups);
+            });
+        }
+        return paginate;
+    }
+
     private void checkEmailIsExist(String email) {
         boolean exists = queryChain().where(SYSTEM_USER.EMAIL.eq(email)).exists();
         if (exists) {

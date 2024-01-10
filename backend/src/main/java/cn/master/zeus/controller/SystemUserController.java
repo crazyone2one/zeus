@@ -3,9 +3,11 @@ package cn.master.zeus.controller;
 import cn.master.zeus.dto.UserDTO;
 import cn.master.zeus.dto.request.AddMemberRequest;
 import cn.master.zeus.dto.request.BaseRequest;
+import cn.master.zeus.dto.request.QueryMemberRequest;
 import cn.master.zeus.dto.request.user.SystemUserDTO;
 import cn.master.zeus.dto.request.user.UserRequest;
 import cn.master.zeus.entity.SystemUser;
+import cn.master.zeus.service.BaseCheckPermissionService;
 import cn.master.zeus.service.ISystemUserService;
 import com.mybatisflex.core.paginate.Page;
 import lombok.RequiredArgsConstructor;
@@ -26,7 +28,7 @@ import java.util.List;
 @RequestMapping("/user")
 @RequiredArgsConstructor
 public class SystemUserController {
-
+    private final BaseCheckPermissionService baseCheckPermissionService;
     private final ISystemUserService iSystemUserService;
 
     /**
@@ -118,5 +120,11 @@ public class SystemUserController {
     @GetMapping("/switch/source/ws/{sourceId}")
     public UserDTO switchWorkspace(@PathVariable(value = "sourceId") String sourceId) {
         return iSystemUserService.switchUserResource("workspace", sourceId);
+    }
+
+    @PostMapping("/ws/project/member/list/{workspaceId}")
+    public Page<SystemUserDTO> getProjectMemberListForWorkspace(@PathVariable(value = "workspaceId") String workspaceId, @RequestBody BaseRequest request) {
+        baseCheckPermissionService.checkProjectBelongToWorkspace(request.getProjectId(), workspaceId);
+        return iSystemUserService.getProjectMemberPage(request);
     }
 }

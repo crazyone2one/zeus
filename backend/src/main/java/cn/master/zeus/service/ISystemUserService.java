@@ -37,4 +37,12 @@ public interface ISystemUserService extends IService<SystemUser> {
     UserDTO switchUserResource(String sign, String sourceId);
 
     UserDTO getUserDTO(String userId);
+
+    /**
+     * 查询项目所属用户
+     *
+     * @param request 查询条件
+     * @return com.mybatisflex.core.paginate.Page<cn.master.zeus.entity.SystemUser>
+     */
+    Page<SystemUserDTO> getProjectMemberPage(BaseRequest request);
 }

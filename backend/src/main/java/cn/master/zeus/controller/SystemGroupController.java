@@ -133,4 +133,9 @@ public class SystemGroupController {
     public void removeGroupMember(@PathVariable("userId") String userId, @PathVariable("groupId") String groupId) {
         iSystemGroupService.removeGroupMember(userId, groupId);
     }
+
+    @GetMapping("/list/project/{projectId}/{userId}")
+    public List<SystemGroup> getProjectMemberGroups(@PathVariable("projectId") String projectId, @PathVariable("userId") String userId) {
+        return iSystemGroupService.getProjectMemberGroups(projectId, userId);
+    }
 }

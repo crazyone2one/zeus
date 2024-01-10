@@ -28,8 +28,10 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 
 import static cn.master.zeus.entity.table.ProjectTableDef.PROJECT;
+import static cn.master.zeus.entity.table.SystemGroupTableDef.SYSTEM_GROUP;
 import static cn.master.zeus.entity.table.SystemUserTableDef.SYSTEM_USER;
 import static cn.master.zeus.entity.table.UserGroupTableDef.USER_GROUP;
+import static com.mybatisflex.core.query.QueryMethods.distinct;
 import static com.mybatisflex.core.query.QueryMethods.max;
 
 /**
@@ -134,6 +136,23 @@ public class ProjectServiceImpl extends ServiceImpl<ProjectMapper, Project> impl
         return queryChain().where(PROJECT.WORKSPACE_ID.eq(request.getWorkspaceId())
                         .and(PROJECT.NAME.like(request.getName())))
                 .orderBy(PROJECT.UPDATE_TIME.desc()).list();
+    }
+
+    @Override
+    public List<Project> getUserProject(ProjectRequest request) {
+        boolean superUser = userGroupMapper.isSuperUser(SessionUtils.getUserId());
+        if (superUser) {
+            return queryChain().where(PROJECT.WORKSPACE_ID.eq(request.getWorkspaceId())
+                            .and(PROJECT.NAME.like(request.getName())))
+                    .orderBy(PROJECT.UPDATE_TIME.desc()).list();
+        }
+        return queryChain().select(distinct(PROJECT.ALL_COLUMNS))
+                .from(SYSTEM_GROUP)
+                .join(USER_GROUP).on(SYSTEM_GROUP.ID.eq(USER_GROUP.GROUP_ID))
+                .join(PROJECT).on(USER_GROUP.SOURCE_ID.eq(PROJECT.ID))
+                .where(SYSTEM_GROUP.TYPE.eq("PROJECT").and(USER_GROUP.USER_ID.eq(request.getUserId()))
+                        .and(PROJECT.NAME.like(request.getName())).and(PROJECT.WORKSPACE_ID.eq(request.getWorkspaceId())))
+                .list();
     }
 
     private long checkSourceRole(String sourceId, String userId, String group) {

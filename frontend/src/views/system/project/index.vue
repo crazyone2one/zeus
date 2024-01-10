@@ -3,6 +3,7 @@ import { usePagination } from '@alova/scene-vue'
 import { DataTableColumns, DataTableRowKey, NButton } from 'naive-ui'
 import { computed, h, onMounted, reactive, ref } from 'vue'
 import EditProject from './EditProject.vue'
+import ProjectMember from './ProjectMember.vue'
 import { IPageResponse, IQueryParam } from '/@/apis/interface'
 import { IProject, getProjectPages } from '/@/apis/modules/project-api'
 import NPagination from '/@/components/NPagination.vue'
@@ -12,7 +13,7 @@ import { i18n } from '/@/i18n'
 import { getCurrentWorkspaceId } from '/@/utils/token'
 
 const editProject = ref<InstanceType<typeof EditProject> | null>(null)
-// const workspaceMember = ref<InstanceType<typeof WorkspaceMember> | null>(null)
+const projectMember = ref<InstanceType<typeof ProjectMember> | null>(null)
 const condition = reactive<IQueryParam>({
   name: '',
   pageNumber: 1,
@@ -111,7 +112,7 @@ const handlePrevPage = (val: number) => {
   pageSize.value = val
 }
 const handleCellClick = (val: IProject) => {
-  //   workspaceMember.value?.open(val)
+  projectMember.value?.open(val)
 }
 onMounted(() => {
   handleList()
@@ -134,6 +135,7 @@ onMounted(() => {
     </n-card>
   </n-spin>
   <edit-project ref="editProject" @refresh="handleList" />
+  <project-member ref="projectMember" />
 </template>
 
 <style scoped></style>

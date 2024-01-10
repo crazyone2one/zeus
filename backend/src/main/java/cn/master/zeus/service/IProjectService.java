@@ -30,4 +30,6 @@ public interface IProjectService extends IService<Project> {
     void updateMember(WorkspaceMemberDTO memberDTO);
 
     List<Project> getProjectList(ProjectRequest request);
+
+    List<Project> getUserProject(ProjectRequest request);
 }

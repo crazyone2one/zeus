@@ -34,6 +34,11 @@ export const getWorkspaceMemberPageSpecial = (page: number, pageSize: number, pa
   params.pageSize = pageSize
   return alovaInstance.Post<IPageResponse<IUser>>('/user/special/ws/member/list', params)
 }
+export const getProjectMemberPages = (page: number, pageSize: number, params: IQueryParam) => {
+  params.pageNumber = page
+  params.pageSize = pageSize
+  return alovaInstance.Post<IPageResponse<IUser>>(`/user/ws/project/member/list/${params.workspaceId}`, params)
+}
 export const getUserListByResourceUrl = (url: string) => alovaInstance.Get<Array<IUser>>(url)
 /**
  * 工作空间下添加用户
