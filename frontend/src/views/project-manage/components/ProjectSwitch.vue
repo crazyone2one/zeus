@@ -78,7 +78,7 @@ onMounted(() => {
 })
 </script>
 <template>
-  <div>
+  <div class="py-2 ml-1">
     <n-tooltip trigger="hover">
       <template #trigger>
         <n-popselect v-model:value="projectId" :options="options" trigger="click" scrollable @update-value="changeWs">
