@@ -2,6 +2,7 @@
 import { usePagination } from '@alova/scene-vue'
 import { DataTableColumns, DataTableRowKey, NButton } from 'naive-ui'
 import { computed, h, onMounted, reactive, ref } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import EditProject from './EditProject.vue'
 import ProjectMember from './ProjectMember.vue'
 import { IPageResponse, IQueryParam } from '/@/apis/interface'
@@ -12,6 +13,8 @@ import NTableOperator from '/@/components/NTableOperator.vue'
 import { i18n } from '/@/i18n'
 import { getCurrentWorkspaceId } from '/@/utils/token'
 
+const route = useRoute()
+const router = useRouter()
 const editProject = ref<InstanceType<typeof EditProject> | null>(null)
 const projectMember = ref<InstanceType<typeof ProjectMember> | null>(null)
 const condition = reactive<IQueryParam>({
@@ -115,6 +118,12 @@ const handleCellClick = (val: IProject) => {
   projectMember.value?.open(val)
 }
 onMounted(() => {
+  if (route.path.split('/')[1] === 'project' && route.path.split('/')[2] === 'create') {
+    router.replace({ path: '/project/all' })
+    setTimeout(() => {
+      handleCreate()
+    }, 200)
+  }
   handleList()
 })
 </script>

@@ -3,7 +3,6 @@ package cn.master.zeus.controller;
 import cn.master.zeus.dto.UserDTO;
 import cn.master.zeus.dto.request.AddMemberRequest;
 import cn.master.zeus.dto.request.BaseRequest;
-import cn.master.zeus.dto.request.QueryMemberRequest;
 import cn.master.zeus.dto.request.user.SystemUserDTO;
 import cn.master.zeus.dto.request.user.UserRequest;
 import cn.master.zeus.entity.SystemUser;
@@ -126,5 +125,10 @@ public class SystemUserController {
     public Page<SystemUserDTO> getProjectMemberListForWorkspace(@PathVariable(value = "workspaceId") String workspaceId, @RequestBody BaseRequest request) {
         baseCheckPermissionService.checkProjectBelongToWorkspace(request.getProjectId(), workspaceId);
         return iSystemUserService.getProjectMemberPage(request);
+    }
+
+    @PostMapping("/update/current")
+    public UserDTO updateCurrentUser(@RequestBody SystemUser user) {
+        return iSystemUserService.updateCurrentUser(user);
     }
 }

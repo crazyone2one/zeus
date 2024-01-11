@@ -1,5 +1,6 @@
 import { IPageResponse, IQueryParam } from '../interface'
-import alovaInstance from '/@/plugins/alova'
+import { IUserDto } from './user-api'
+import http from '/@/plugins/alova'
 
 export interface IProject {
   id: string
@@ -21,16 +22,19 @@ export interface IProject {
 export const getProjectPages = (page: number, pageSize: number, params: IQueryParam) => {
   params.pageNumber = page
   params.pageSize = pageSize
-  return alovaInstance.Post<IPageResponse<IProject>>('/project/page', params)
+  return http.Post<IPageResponse<IProject>>('/project/page', params)
 }
 export const saveProject = (params: IProject) => {
-  return alovaInstance.Post<IProject>('/project/save', params)
+  return http.Post<IProject>('/project/save', params)
 }
 export const modifyProject = (params: IProject) => {
-  return alovaInstance.Put('/project/update', params)
+  return http.Put('/project/update', params)
 }
 
-export const getProjectList = () => alovaInstance.Get<Array<IProject>>(`/project/list`)
+export const getProjectList = () => http.Get<Array<IProject>>(`/project/list`)
 
 export const getUserProjectList = (param: { userId: string; workspaceId: string }) =>
-  alovaInstance.Post<Array<IProject>>(`/project/list/related`, param)
+  http.Post<Array<IProject>>(`/project/list/related`, param)
+
+export const switchProject = (param: { id: string; lastProjectId: string }) =>
+  http.Post<IUserDto>(`/user/update/current`, param)

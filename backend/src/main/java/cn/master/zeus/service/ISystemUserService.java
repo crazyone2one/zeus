@@ -45,4 +45,7 @@ public interface ISystemUserService extends IService<SystemUser> {
      * @return com.mybatisflex.core.paginate.Page<cn.master.zeus.entity.SystemUser>
      */
     Page<SystemUserDTO> getProjectMemberPage(BaseRequest request);
+
+    UserDTO updateCurrentUser(SystemUser user);
+    void updateUser(SystemUser user);
 }

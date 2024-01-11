@@ -233,7 +233,7 @@ public class SystemUserServiceImpl extends ServiceImpl<SystemUserMapper, SystemU
                                 .where(USER_GROUP.SOURCE_ID.eq(request.getProjectId()))
                                 .orderBy(USER_GROUP.UPDATE_TIME.desc())
                 ).as("temp");
-        Page<SystemUserDTO> paginate = mapper.paginateAs(Page.of(request.getPageNumber(), request.getPageSize()), query,SystemUserDTO.class);
+        Page<SystemUserDTO> paginate = mapper.paginateAs(Page.of(request.getPageNumber(), request.getPageSize()), query, SystemUserDTO.class);
         List<SystemUserDTO> records = paginate.getRecords();
         if (CollectionUtils.isNotEmpty(records)) {
             records.forEach(u -> {
@@ -243,6 +243,42 @@ public class SystemUserServiceImpl extends ServiceImpl<SystemUserMapper, SystemU
             });
         }
         return paginate;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public UserDTO updateCurrentUser(SystemUser user) {
+        String currentUserId = SessionUtils.getUserId();
+        if (!StringUtils.equals(currentUserId, user.getId())) {
+            BusinessException.throwException("未经授权");
+        }
+        updateUser(user);
+        return getUserDTO(user.getId());
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void updateUser(SystemUser user) {
+        if (StringUtils.isNotBlank(user.getEmail())) {
+            boolean exists = queryChain().where(SYSTEM_USER.EMAIL.eq(user.getEmail())
+                    .and(SYSTEM_USER.ID.ne(user.getId()))).exists();
+            if (exists) {
+                BusinessException.throwException("用户邮箱已存在");
+            }
+        }
+        SystemUser userFromDB = mapper.selectOneById(user.getId());
+        if (user.getLastWorkspaceId() != null && !StringUtils.equals(user.getLastWorkspaceId(), userFromDB.getLastWorkspaceId())) {
+            List<Project> projects = getProjectListByWsAndUserId(user.getId(), user.getLastWorkspaceId());
+            if (!projects.isEmpty()) {
+                boolean present = projects.stream().allMatch((p -> StringUtils.equals(p.getId(), user.getLastProjectId())));
+                if (!present) {
+                    user.setLastProjectId(projects.get(0).getId());
+                }
+            } else {
+                user.setLastProjectId(StringUtils.EMPTY);
+            }
+        }
+        mapper.update(user);
     }
 
     private void checkEmailIsExist(String email) {
