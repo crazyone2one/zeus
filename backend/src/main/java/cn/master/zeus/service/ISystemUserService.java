@@ -47,5 +47,12 @@ public interface ISystemUserService extends IService<SystemUser> {
     Page<SystemUserDTO> getProjectMemberPage(BaseRequest request);
 
     UserDTO updateCurrentUser(SystemUser user);
+
     void updateUser(SystemUser user);
+
+    Page<SystemUser> getProjectMemberList(BaseRequest request);
+
+    void deleteProjectMember(String projectId, String userId);
+
+    void addProjectMember(AddMemberRequest request);
 }

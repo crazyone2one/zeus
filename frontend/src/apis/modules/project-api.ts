@@ -11,6 +11,8 @@ export interface IProject {
   caseTemplateId?: string
   issueTemplateId?: string
   memberSize?: number
+  createUser?: string
+  createTime?: string
 }
 /**
  * 列表数据查询
@@ -38,3 +40,13 @@ export const getUserProjectList = (param: { userId: string; workspaceId: string 
 
 export const switchProject = (param: { id: string; lastProjectId: string }) =>
   http.Post<IUserDto>(`/user/update/current`, param)
+
+export const getProjectDetail = (id: string) => http.Get<IProject>(`/project/getInfo/${id}`)
+export const getProjectMemberSize = (id: string) => http.Get<number>(`/project/member/size/${id}`)
+
+// 项目管理模块相关接口
+export const getProjectMembers = (page: number, pageSize: number, params: IQueryParam) => {
+  params.pageNumber = page
+  params.pageSize = pageSize
+  return http.Post<IPageResponse<IProject>>('/project/member/list/', params)
+}

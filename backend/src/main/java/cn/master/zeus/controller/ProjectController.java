@@ -1,14 +1,20 @@
 package cn.master.zeus.controller;
 
+import cn.master.zeus.common.exception.BusinessException;
 import cn.master.zeus.dto.WorkspaceMemberDTO;
+import cn.master.zeus.dto.request.AddMemberRequest;
+import cn.master.zeus.dto.request.BaseRequest;
 import cn.master.zeus.dto.request.project.ProjectRequest;
+import cn.master.zeus.dto.request.user.SystemUserDTO;
 import cn.master.zeus.entity.Project;
 import cn.master.zeus.entity.SystemUser;
 import cn.master.zeus.service.IProjectService;
+import cn.master.zeus.service.ISystemUserService;
 import cn.master.zeus.util.SessionUtils;
 import com.mybatisflex.core.paginate.Page;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.Serializable;
@@ -26,6 +32,7 @@ import java.util.List;
 public class ProjectController {
 
     private final IProjectService iProjectService;
+    private final ISystemUserService systemUserService;
 
     /**
      * 添加。
@@ -117,5 +124,27 @@ public class ProjectController {
         // 仅支持查询当前用户的项目
         request.setUserId(SessionUtils.getUserId());
         return iProjectService.getUserProject(request);
+    }
+
+    @PostMapping("/member/list/")
+    @PreAuthorize("hasAuthority('PROJECT_USER:READ')")
+    public Page<SystemUserDTO> getProjectMemberList(@RequestBody BaseRequest request) {
+        return systemUserService.getProjectMemberPage(request);
+    }
+
+    @GetMapping("/member/delete/{projectId}/{userId}")
+    @PreAuthorize("hasAuthority('PROJECT_USER:READ+DELETE')")
+    public void deleteProjectMember(@PathVariable String projectId, @PathVariable String userId) {
+        String currentUserId = SessionUtils.getUserId();
+        if (StringUtils.equals(userId, currentUserId)) {
+            BusinessException.throwException("无法移除当前登录用户");
+        }
+        systemUserService.deleteProjectMember(projectId, userId);
+    }
+
+    @PostMapping("/member/add")
+    @PreAuthorize("hasAuthority('PROJECT_USER:READ+CREATE')")
+    public void addProjectMember(@RequestBody AddMemberRequest request) {
+        systemUserService.addProjectMember(request);
     }
 }

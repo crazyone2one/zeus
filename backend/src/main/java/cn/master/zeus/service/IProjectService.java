@@ -1,6 +1,7 @@
 package cn.master.zeus.service;
 
 import cn.master.zeus.dto.WorkspaceMemberDTO;
+import cn.master.zeus.dto.request.AddMemberRequest;
 import cn.master.zeus.dto.request.project.ProjectRequest;
 import com.mybatisflex.core.paginate.Page;
 import com.mybatisflex.core.service.IService;

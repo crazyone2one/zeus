@@ -13,6 +13,7 @@ import cn.master.zeus.entity.Project;
 import cn.master.zeus.entity.SystemGroup;
 import cn.master.zeus.entity.SystemUser;
 import cn.master.zeus.entity.UserGroup;
+import cn.master.zeus.mapper.ProjectMapper;
 import cn.master.zeus.mapper.SystemUserMapper;
 import cn.master.zeus.mapper.UserGroupMapper;
 import cn.master.zeus.service.ISystemUserService;
@@ -31,10 +32,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import static cn.master.zeus.entity.table.ProjectTableDef.PROJECT;
 import static cn.master.zeus.entity.table.SystemGroupTableDef.SYSTEM_GROUP;
@@ -55,6 +54,7 @@ public class SystemUserServiceImpl extends ServiceImpl<SystemUserMapper, SystemU
     private final UserGroupMapper userGroupMapper;
     private final PasswordEncoder passwordEncoder;
     private final IUserGroupPermissionService userGroupPermissionService;
+    private final ProjectMapper projectMapper;
 
     @Override
     public List<SystemUser> getMemberList(QueryMemberRequest request) {
@@ -279,6 +279,89 @@ public class SystemUserServiceImpl extends ServiceImpl<SystemUserMapper, SystemU
             }
         }
         mapper.update(user);
+    }
+
+    @Override
+    public Page<SystemUser> getProjectMemberList(BaseRequest request) {
+        QueryWrapper wrapper = new QueryWrapper();
+        QueryWrapper query = new QueryWrapper()
+                .select("distinct *").from(
+                        wrapper.select(SYSTEM_USER.ALL_COLUMNS)
+                                .from(USER_GROUP).join(SYSTEM_USER).on(USER_GROUP.USER_ID.eq(SYSTEM_USER.ID))
+                                .where(USER_GROUP.SOURCE_ID.eq(request.getProjectId()))
+                                .orderBy(USER_GROUP.UPDATE_TIME.desc())
+                ).as("temp");
+        return mapper.paginate(Page.of(request.getPageNumber(), request.getPageSize()), query);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void deleteProjectMember(String projectId, String userId) {
+        List<SystemGroup> groups = QueryChain.of(SystemGroup.class).where(SYSTEM_GROUP.TYPE.eq(UserGroupType.PROJECT)).list();
+        List<String> groupIds = groups.stream().map(SystemGroup::getId).toList();
+        if (CollectionUtils.isEmpty(groupIds)) {
+            return;
+        }
+        SystemUser user = mapper.selectOneById(userId);
+        if (StringUtils.equals(projectId, user.getLastProjectId())) {
+            user.setLastProjectId(StringUtils.EMPTY);
+            mapper.update(user);
+        }
+        QueryChain<UserGroup> userGroupQueryChain = QueryChain.of(UserGroup.class).where(USER_GROUP.USER_ID.eq(userId)
+                .and(USER_GROUP.SOURCE_ID.eq(projectId))
+                .and(USER_GROUP.GROUP_ID.in(groupIds)));
+        userGroupMapper.deleteByQuery(userGroupQueryChain);
+    }
+
+    @Override
+    public void addProjectMember(AddMemberRequest request) {
+        addGroupMember("PROJECT", request.getProjectId(), request.getUserIds(), request.getGroupIds());
+    }
+
+    private void addGroupMember(String type, String sourceId, List<String> userIds, List<String> groupIds) {
+        if (!StringUtils.equalsAny(type, "PROJECT", "WORKSPACE") || StringUtils.isBlank(sourceId)
+                || CollectionUtils.isEmpty(userIds) || CollectionUtils.isEmpty(groupIds)) {
+            log.warn("add member warning, please check param!");
+            return;
+        }
+        List<String> dbOptionalGroupIds = getGroupIdsByType(type, sourceId);
+        for (String userId : userIds) {
+            SystemUser user = mapper.selectOneById(userId);
+            if (Objects.isNull(user)) {
+                log.warn("add member warning, invalid user id: " + userId);
+                continue;
+            }
+            List<String> toAddGroupIds = new ArrayList<>(groupIds);
+            List<String> existGroupIds = getUserExistSourceGroup(userId, sourceId);
+            toAddGroupIds.removeAll(existGroupIds);
+            toAddGroupIds.retainAll(dbOptionalGroupIds);
+            if (CollectionUtils.isEmpty(toAddGroupIds)) {
+                log.warn("group ids not in db or not has permission, please check!");
+                continue;
+            }
+            toAddGroupIds.forEach(groupId -> {
+                UserGroup userGroup = UserGroup.builder().userId(userId).groupId(groupId).sourceId(sourceId).build();
+                userGroupMapper.insert(userGroup);
+            });
+        }
+    }
+
+    private List<String> getGroupIdsByType(String type, String sourceId) {
+        List<String> scopeList = Arrays.asList("global", sourceId);
+        if (StringUtils.equals(type, "PROJECT")) {
+            Project project = projectMapper.selectOneById(sourceId);
+            if (Objects.nonNull(project)) {
+                scopeList = Arrays.asList("global", sourceId, project.getWorkspaceId());
+            }
+        }
+        List<SystemGroup> groups = QueryChain.of(SystemGroup.class).where(SYSTEM_GROUP.SCOPE_ID.in(scopeList)
+                .and(SYSTEM_GROUP.TYPE.eq(type))).list();
+        return groups.stream().map(SystemGroup::getId).toList();
+    }
+
+    private List<String> getUserExistSourceGroup(String userId, String sourceId) {
+        List<UserGroup> userGroups = QueryChain.of(UserGroup.class).where(USER_GROUP.USER_ID.eq(userId).and(USER_GROUP.SOURCE_ID.eq(sourceId))).list();
+        return userGroups.stream().map(UserGroup::getGroupId).collect(Collectors.toList());
     }
 
     private void checkEmailIsExist(String email) {
