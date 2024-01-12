@@ -73,7 +73,7 @@ const alovaInstance = createAlova({
           },
         })
       }
-      if (response.status === 403) {
+      if ([403, 500].includes(response.status)) {
         window.$message.warning(json.message)
       }
       if (response.status !== 200) throw new Error(json.message)

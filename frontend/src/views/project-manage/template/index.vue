@@ -1,13 +1,17 @@
 <script setup lang="ts">
-import { NResult } from 'naive-ui'
+import { NTabPane, NTabs } from 'naive-ui'
+import CustomFieldList from './components/CustomFieldList.vue'
 </script>
 <template>
-  <div>
-    <n-result status="info" title="信息" description="project template">
-      <template #footer>
-        <n-button>我需要信息</n-button>
-      </template>
-    </n-result>
-  </div>
+  <n-card content-style="padding: 0;">
+    <n-tabs type="line" size="large" :tabs-padding="20" pane-style="padding: 20px;">
+      <n-tab-pane :name="$t('custom_field.name')">
+        <custom-field-list />
+      </n-tab-pane>
+      <n-tab-pane :name="$t('workspace.case_template_manage')" disabled> ROCKLIFE </n-tab-pane>
+      <n-tab-pane :name="$t('workspace.issue_template_manage')" disabled> ROCKLIFE </n-tab-pane>
+      <n-tab-pane :name="$t('custom_template.api_template')" disabled> ROCKLIFE </n-tab-pane>
+    </n-tabs>
+  </n-card>
 </template>
 <style scoped></style>

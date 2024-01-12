@@ -66,3 +66,8 @@ export const CUSTOM_FIELD_TYPE_OPTION: Array<SelectOption> = [
   { value: 'float', label: 'workspace.custom_filed.float' },
   { value: 'multipleInput', label: 'workspace.custom_filed.multipleInput' },
 ]
+export const CUSTOM_FIELD_SCENE_OPTION: Array<SelectOption> = [
+  { value: 'TEST_CASE', label: 'workspace.case_template_manage' },
+  { value: 'ISSUE', label: 'workspace.issue_template_manage' },
+  { value: 'API', label: 'workspace.api_template_manage' },
+]
