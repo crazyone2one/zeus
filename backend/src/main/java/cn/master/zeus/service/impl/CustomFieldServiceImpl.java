@@ -5,25 +5,28 @@ import cn.master.zeus.common.exception.BusinessException;
 import cn.master.zeus.dto.CustomFieldDao;
 import cn.master.zeus.dto.request.QueryCustomFieldRequest;
 import cn.master.zeus.entity.CustomField;
+import cn.master.zeus.entity.CustomFieldTemplate;
 import cn.master.zeus.mapper.CustomFieldMapper;
 import cn.master.zeus.service.ICustomFieldService;
 import cn.master.zeus.service.ICustomFieldTemplateService;
+import cn.master.zeus.service.ITestCaseTemplateService;
 import cn.master.zeus.util.SessionUtils;
 import com.mybatisflex.core.paginate.Page;
 import com.mybatisflex.core.query.QueryChain;
 import com.mybatisflex.spring.service.impl.ServiceImpl;
-import lombok.RequiredArgsConstructor;
+import lombok.AllArgsConstructor;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import static cn.master.zeus.entity.table.CustomFieldTableDef.CUSTOM_FIELD;
+import static cn.master.zeus.entity.table.CustomFieldTemplateTableDef.CUSTOM_FIELD_TEMPLATE;
 import static com.mybatisflex.core.query.QueryMethods.notExists;
 
 /**
@@ -33,9 +36,11 @@ import static com.mybatisflex.core.query.QueryMethods.notExists;
  * @since 1.0.0
  */
 @Service
-@RequiredArgsConstructor
+@AllArgsConstructor(onConstructor = @__(@Lazy))
 public class CustomFieldServiceImpl extends ServiceImpl<CustomFieldMapper, CustomField> implements ICustomFieldService {
     private final ICustomFieldTemplateService customFieldTemplateService;
+    @Lazy
+    private final ITestCaseTemplateService testCaseTemplateService;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -86,7 +91,7 @@ public class CustomFieldServiceImpl extends ServiceImpl<CustomFieldMapper, Custo
             customFieldDao.setOriginGlobalId(customField.getId());
             add(customFieldDao);
             if (StringUtils.equals(customField.getScene(), TemplateConstants.FieldTemplateScene.TEST_CASE.name())) {
-                //testCaseTemplateService.handleSystemFieldCreate(customFieldDao);
+                testCaseTemplateService.handleSystemFieldCreate(customFieldDao);
             } else if (StringUtils.equals(customField.getScene(), TemplateConstants.FieldTemplateScene.API.name())) {
                 //apiTemplateService.handleSystemFieldCreate(customFieldDao);
             } else {
@@ -96,6 +101,57 @@ public class CustomFieldServiceImpl extends ServiceImpl<CustomFieldMapper, Custo
             checkExist(customField);
             mapper.update(customField);
         }
+    }
+
+    @Override
+    public List<CustomFieldDao> getCustomFieldByTemplateId(String id) {
+        List<CustomFieldTemplate> customFields = QueryChain.of(CustomFieldTemplate.class)
+                .select(CUSTOM_FIELD_TEMPLATE.ID, CUSTOM_FIELD_TEMPLATE.FIELD_ID.as("fieldId")
+                        , CUSTOM_FIELD_TEMPLATE.TEMPLATE_ID.as("templateId"), CUSTOM_FIELD_TEMPLATE.SCENE, CUSTOM_FIELD_TEMPLATE.REQUIRED
+                        , CUSTOM_FIELD_TEMPLATE.ORDER, CUSTOM_FIELD_TEMPLATE.DEFAULT_VALUE, CUSTOM_FIELD_TEMPLATE.CUSTOM_DATA, CUSTOM_FIELD_TEMPLATE.KEY)
+                .where(CUSTOM_FIELD_TEMPLATE.TEMPLATE_ID.eq(id)).orderBy(CUSTOM_FIELD_TEMPLATE.ORDER.asc()).list();
+        List<String> fieldIds = customFields.stream().map(CustomFieldTemplate::getFieldId).toList();
+        List<CustomField> fields = getFieldByIds(fieldIds);
+        Map<String, CustomField> fieldMap = fields.stream().collect(Collectors.toMap(CustomField::getId, item -> item));
+        List<CustomFieldDao> result = new ArrayList<>();
+        if (CollectionUtils.isNotEmpty(customFields)) {
+            customFields.forEach((item) -> {
+                CustomFieldDao customFieldDao = new CustomFieldDao();
+                CustomField customField = fieldMap.get(item.getFieldId());
+                BeanUtils.copyProperties(customField, customFieldDao);
+                BeanUtils.copyProperties(item, customFieldDao);
+                customFieldDao.setId(item.getFieldId());
+                result.add(customFieldDao);
+            });
+        }
+        return result.stream().distinct().collect(Collectors.toList());
+    }
+
+    @Override
+    public List<CustomField> getFieldByIds(List<String> ids) {
+        if (CollectionUtils.isNotEmpty(ids)) {
+            return queryChain().select(CUSTOM_FIELD.ALL_COLUMNS).from(CUSTOM_FIELD.as("cf")).where(CUSTOM_FIELD.ID.in(ids)).list();
+        }
+        return new ArrayList<>();
+    }
+
+    @Override
+    public List<CustomField> getDefaultField(QueryCustomFieldRequest request) {
+        List<CustomField> workspaceSystemFields = queryChain().where(CUSTOM_FIELD.SYSTEM.eq(true).and(CUSTOM_FIELD.SCENE.eq(request.getScene()))
+                .and(CUSTOM_FIELD.PROJECT_ID.eq(request.getProjectId()))).list();
+        Set<String> workspaceSystemFieldNames = workspaceSystemFields.stream().map(CustomField::getName).collect(Collectors.toSet());
+        List<CustomField> globalFields = getGlobalField(request.getScene());
+        // 工作空间的系统字段加上全局的字段
+        globalFields.forEach(item -> {
+            if (!workspaceSystemFieldNames.contains(item.getName())) {
+                workspaceSystemFields.add(item);
+            }
+        });
+        return workspaceSystemFields;
+    }
+
+    private List<CustomField> getGlobalField(String scene) {
+        return queryChain().where(CUSTOM_FIELD.GLOBAL.eq(true).and(CUSTOM_FIELD.SCENE.eq(scene))).list();
     }
 
     private QueryChain<CustomField> queryChain(QueryCustomFieldRequest page) {

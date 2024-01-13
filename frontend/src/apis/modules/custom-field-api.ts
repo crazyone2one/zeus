@@ -11,6 +11,11 @@ export interface ICustomField {
   remark: string
   projectId: string
   options?: Array<SelectOption>
+  required?: boolean
+  disabled?: boolean
+  fieldId?: string
+  defaultValue?: string[]
+  [key: string]: string | boolean | Array<SelectOption> | Array<string> | undefined
 }
 
 export const getCustomFieldPages = (page: number, pageSize: number, params: IQueryParam) => {

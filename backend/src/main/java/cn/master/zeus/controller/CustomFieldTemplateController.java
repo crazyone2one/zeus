@@ -1,6 +1,9 @@
 package cn.master.zeus.controller;
 
+import cn.master.zeus.dto.CustomFieldTemplateDao;
 import com.mybatisflex.core.paginate.Page;
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -22,11 +25,11 @@ import java.util.List;
  * @since 1.0.0
  */
 @RestController
-@RequestMapping("/customFieldTemplate")
+@RequiredArgsConstructor
+@RequestMapping("/custom/field/template")
 public class CustomFieldTemplateController {
 
-    @Autowired
-    private ICustomFieldTemplateService iCustomFieldTemplateService;
+    private final ICustomFieldTemplateService iCustomFieldTemplateService;
 
     /**
      * 添加。
@@ -66,9 +69,10 @@ public class CustomFieldTemplateController {
      *
      * @return 所有数据
      */
-    @GetMapping("list")
-    public List<CustomFieldTemplate> list() {
-        return iCustomFieldTemplateService.list();
+    @PostMapping("list")
+    @PreAuthorize("hasAnyAuthority('PROJECT_TEMPLATE:READ+CUSTOM','PROJECT_TEMPLATE:READ+CASE_TEMPLATE','PROJECT_TEMPLATE:READ+ISSUE_TEMPLATE','PROJECT_TEMPLATE:READ+API_TEMPLATE')")
+    public List<CustomFieldTemplateDao> list(@RequestBody CustomFieldTemplate request) {
+        return iCustomFieldTemplateService.getList(request);
     }
 
     /**
