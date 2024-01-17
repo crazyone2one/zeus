@@ -178,6 +178,7 @@ public class ProjectServiceImpl extends ServiceImpl<ProjectMapper, Project> impl
             BusinessException.throwException("project_name_already_exists");
         }
         project.setSystemId(genSystemId());
+        project.setCreateUser(SessionUtils.getUserId());
         mapper.insert(project);
     }
 
