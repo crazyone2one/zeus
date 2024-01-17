@@ -10,9 +10,11 @@ import { IProject, getProjectPages } from '/@/apis/modules/project-api'
 import NPagination from '/@/components/NPagination.vue'
 import NTableHeader from '/@/components/NTableHeader.vue'
 import NTableOperator from '/@/components/NTableOperator.vue'
+import { useEmitter } from '/@/composables/use-emitter'
 import { i18n } from '/@/i18n'
 import { getCurrentWorkspaceId } from '/@/utils/token'
 
+const emitter = useEmitter()
 const route = useRoute()
 const router = useRouter()
 const editProject = ref<InstanceType<typeof EditProject> | null>(null)
@@ -101,8 +103,8 @@ const handleList = () => {
   loadTableData()
 }
 const handleCreate = () => {
-  let workspaceId = getCurrentWorkspaceId()
-  if (!workspaceId) {
+  let _workspaceId = workspaceId.value
+  if (!_workspaceId) {
     window.$message.warning(i18n.t('project.please_choose_workspace'))
     return false
   }
@@ -125,6 +127,11 @@ onMounted(() => {
     }, 200)
   }
   handleList()
+  // 全局情况下，workspaceId变化时，重新加载数据
+  emitter.on('projectChange', (wsId: string) => {
+    condition.workspaceId = wsId
+    loadTableData()
+  })
 })
 </script>
 <template>
@@ -144,7 +151,7 @@ onMounted(() => {
     </n-card>
   </n-spin>
   <edit-project ref="editProject" @refresh="handleList" />
-  <project-member ref="projectMember" />
+  <project-member ref="projectMember" @refresh="handleList" />
 </template>
 
 <style scoped></style>

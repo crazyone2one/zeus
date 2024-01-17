@@ -1,5 +1,5 @@
 import { IPageResponse, IQueryParam } from '../interface'
-import { IUserDto } from './user-api'
+import { IUser, IUserDto } from './user-api'
 import http from '/@/plugins/alova'
 
 export interface IProject {
@@ -50,3 +50,18 @@ export const getProjectMembers = (page: number, pageSize: number, params: IQuery
   params.pageSize = pageSize
   return http.Post<IPageResponse<IProject>>('/project/member/list/', params)
 }
+/**
+ * 修改项目下成员信息
+ * @param param
+ * @returns
+ */
+export const modifyProjectMember = (param: IUser) => http.Post(`/project/member/update`, param)
+export const delProjectMember = (projectId: string, userId: string) =>
+  http.Get(`/project/member/delete/${projectId}/${userId}`)
+interface IAddMemberRequest {
+  workspaceId?: string
+  projectId?: string
+  userIds: Array<string>
+  groupIds: Array<string>
+}
+export const addProjectMember = (param: IAddMemberRequest) => http.Post(`/project/member/add`, param)

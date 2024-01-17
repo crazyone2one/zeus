@@ -3,9 +3,10 @@ import { usePagination } from '@alova/scene-vue'
 import { useRequest } from 'alova'
 import { DataTableColumns, DataTableRowKey } from 'naive-ui'
 import { h, reactive, ref } from 'vue'
+import ModifyMember from './ModifyMember.vue'
 import { IPageResponse, IQueryParam } from '/@/apis/interface'
-import { IProject } from '/@/apis/modules/project-api'
-import { IUser, addWorkspaceMemberSpecial, getProjectMemberPages } from '/@/apis/modules/user-api'
+import { IProject, addProjectMember, delProjectMember } from '/@/apis/modules/project-api'
+import { IUser, getProjectMemberPages } from '/@/apis/modules/user-api'
 import { IWorkspace } from '/@/apis/modules/workspace-api'
 import NModalDialog from '/@/components/NModalDialog.vue'
 import NPagination from '/@/components/NPagination.vue'
@@ -13,12 +14,11 @@ import NRolesTag from '/@/components/NRolesTag.vue'
 import NTableHeader from '/@/components/NTableHeader.vue'
 import NTableOperator from '/@/components/NTableOperator.vue'
 import { i18n } from '/@/i18n'
-import { GROUP_TYPE } from '/@/utils/constants'
 import AddMember from '/@/views/system/workspace/components/AddMember.vue'
 
 const modalDialog = ref<InstanceType<typeof NModalDialog> | null>(null)
 const addMember = ref<InstanceType<typeof AddMember> | null>(null)
-// const editWorkspaceMember = ref<InstanceType<typeof EditWorkspaceMember> | null>(null)
+const modifyMember = ref<InstanceType<typeof ModifyMember> | null>(null)
 const condition = reactive<IQueryParam>({
   name: '',
   pageNumber: 1,
@@ -62,7 +62,7 @@ const columns: DataTableColumns<IUser> = [
         NTableOperator,
         {
           onEditClick: () => handleEdit(row),
-          onDeleteClick: () => handleDelete(row),
+          onDeleteClick: () => handleDeleteMember(row),
           tip2: i18n.t('commons.remove'),
           editPermission: ['WORKSPACE_PROJECT_MANAGER:READ+EDIT_USER'],
           deletePermission: ['WORKSPACE_PROJECT_MANAGER:READ+DELETE_USER'],
@@ -72,7 +72,6 @@ const columns: DataTableColumns<IUser> = [
     },
   },
 ]
-const emit = defineEmits(['refresh'])
 const groupScopeId = ref('')
 const currentWorkspaceRow = ref<IWorkspace>({} as IWorkspace)
 const rowKey = (row: IUser) => row.id
@@ -111,6 +110,7 @@ const handlePrevPage = (val: number) => {
 const handleList = () => {
   loadTableData()
 }
+const emit = defineEmits(['refresh'])
 const open = (row: IProject): void => {
   condition.name = ''
   condition.workspaceId = row.workspaceId
@@ -128,21 +128,39 @@ const handleAddMember = () => {
  * @param row 用户信息
  */
 const handleEdit = (row: IUser) => {
-  // editWorkspaceMember.value?.open(row)
+  modifyMember.value?.open(row)
+}
+const { send } = useRequest((param) => addProjectMember(param), { immediate: false })
+const _addMember = (param: { userIds: Array<string>; groupIds: Array<string>; projectId?: string }) => {
+  param.projectId = currentWorkspaceRow.value.id
+  send(param).then(() => {
+    loadTableData()
+    addMember.value?.close()
+  })
 }
 /**
  * 移除用户
  * @param row 用户信息
  */
-const handleDelete = (row: IUser) => {
-  window.$message.info(row.name)
-}
-const { send } = useRequest((param) => addWorkspaceMemberSpecial(param), { immediate: false })
-const _addMember = (param: { userIds: Array<string>; groupIds: Array<string>; workspaceId?: string }) => {
-  param.workspaceId = currentWorkspaceRow.value.id
-  send(param).then(() => {
-    loadTableData()
-    addMember.value?.close()
+const { send: deleteMember, loading: deleteMemberLoad } = useRequest((pId, uId) => delProjectMember(pId, uId), {
+  immediate: false,
+})
+const handleDeleteMember = (row: IUser) => {
+  window.$dialog.warning({
+    title: '警告',
+    content: i18n.t('member.remove_member'),
+    positiveText: i18n.t('commons.confirm'),
+    negativeText: i18n.t('commons.cancel'),
+    onPositiveClick: () => {
+      deleteMember(currentWorkspaceRow.value.id, row.id).then(() => {
+        window.$message.success(i18n.t('commons.remove_success'))
+        handleList()
+        emit('refresh')
+      })
+    },
+    onNegativeClick: () => {
+      window.$message.info(i18n.t('commons.remove_cancel'))
+    },
   })
 }
 const handleClose = () => {
@@ -152,7 +170,7 @@ const handleClose = () => {
 defineExpose({ open })
 </script>
 <template>
-  <n-spin :show="loading">
+  <n-spin :show="loading || deleteMemberLoad">
     <n-modal-dialog ref="modalDialog" :title="$t('commons.member')" dialog-width="70%" @confirm="handleClose">
       <template #content>
         <n-table-header
@@ -167,8 +185,8 @@ defineExpose({ open })
       </template>
     </n-modal-dialog>
   </n-spin>
-  <add-member ref="addMember" :group-type="GROUP_TYPE.WORKSPACE" :group-scope-id="groupScopeId" @submit="_addMember" />
-  <!-- <edit-workspace-member ref="editWorkspaceMember" :group-scope-id="groupScopeId" @refresh="loadTableData" /> -->
+  <add-member ref="addMember" :group-type="'PROJECT'" :group-scope-id="groupScopeId" @submit="_addMember" />
+  <modify-member ref="modifyMember" @refresh="handleList" />
 </template>
 
 <style scoped></style>
