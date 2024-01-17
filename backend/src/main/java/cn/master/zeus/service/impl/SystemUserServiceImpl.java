@@ -7,6 +7,7 @@ import cn.master.zeus.dto.UserGroupPermissionDTO;
 import cn.master.zeus.dto.request.AddMemberRequest;
 import cn.master.zeus.dto.request.BaseRequest;
 import cn.master.zeus.dto.request.QueryMemberRequest;
+import cn.master.zeus.dto.request.member.EditPasswordRequest;
 import cn.master.zeus.dto.request.user.SystemUserDTO;
 import cn.master.zeus.dto.request.user.UserRequest;
 import cn.master.zeus.entity.Project;
@@ -316,6 +317,14 @@ public class SystemUserServiceImpl extends ServiceImpl<SystemUserMapper, SystemU
     @Override
     public void addProjectMember(AddMemberRequest request) {
         addGroupMember("PROJECT", request.getProjectId(), request.getUserIds(), request.getGroupIds());
+    }
+
+    @Override
+    public int updateUserPassword(EditPasswordRequest request) {
+        SystemUser user = mapper.selectOneById(request.getId());
+        String newPassword = request.getNewPassword();
+        user.setPassword(passwordEncoder.encode(newPassword));
+        return mapper.update(user);
     }
 
     private void addGroupMember(String type, String sourceId, List<String> userIds, List<String> groupIds) {

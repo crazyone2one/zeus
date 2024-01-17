@@ -4,6 +4,7 @@ import cn.master.zeus.dto.UserDTO;
 import cn.master.zeus.dto.request.AddMemberRequest;
 import cn.master.zeus.dto.request.BaseRequest;
 import cn.master.zeus.dto.request.QueryMemberRequest;
+import cn.master.zeus.dto.request.member.EditPasswordRequest;
 import cn.master.zeus.dto.request.user.SystemUserDTO;
 import cn.master.zeus.dto.request.user.UserRequest;
 import cn.master.zeus.entity.SystemUser;
@@ -55,4 +56,6 @@ public interface ISystemUserService extends IService<SystemUser> {
     void deleteProjectMember(String projectId, String userId);
 
     void addProjectMember(AddMemberRequest request);
+
+    int updateUserPassword(EditPasswordRequest request);
 }

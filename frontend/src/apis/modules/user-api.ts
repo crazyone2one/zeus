@@ -56,3 +56,6 @@ export const specialListUsers = (page: number, pageSize: number, params: IQueryP
 
 export const specialCreateUser = (user: IUser) => alovaInstance.Post(`/user/special/save`, user)
 export const specialModifyUser = (user: IUser) => alovaInstance.Post(`/user/special/update`, user)
+
+export const specialModifyPassword = (param: { confirmPassword: string; newPassword: string; id: string }) =>
+  alovaInstance.Post(`/user/special/password`, param)

@@ -3,6 +3,7 @@ package cn.master.zeus.controller;
 import cn.master.zeus.dto.UserDTO;
 import cn.master.zeus.dto.request.AddMemberRequest;
 import cn.master.zeus.dto.request.BaseRequest;
+import cn.master.zeus.dto.request.member.EditPasswordRequest;
 import cn.master.zeus.dto.request.user.SystemUserDTO;
 import cn.master.zeus.dto.request.user.UserRequest;
 import cn.master.zeus.entity.SystemUser;
@@ -130,5 +131,11 @@ public class SystemUserController {
     @PostMapping("/update/current")
     public UserDTO updateCurrentUser(@RequestBody SystemUser user) {
         return iSystemUserService.updateCurrentUser(user);
+    }
+
+    @PostMapping("/special/password")
+    @PreAuthorize("hasAuthority('SYSTEM_USER:READ+EDIT_PASSWORD')")
+    public int updatePassword(@RequestBody EditPasswordRequest request) {
+        return iSystemUserService.updateUserPassword(request);
     }
 }

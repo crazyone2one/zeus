@@ -2,6 +2,7 @@
 import { usePagination } from '@alova/scene-vue'
 import { DataTableColumns, DataTableRowKey, NSwitch } from 'naive-ui'
 import { computed, h, onMounted, reactive, ref } from 'vue'
+import EditPassword from './components/EditPassword.vue'
 import EditUser from './components/EditUser.vue'
 import { IPageResponse, IQueryParam } from '/@/apis/interface'
 import { IUser, specialListUsers } from '/@/apis/modules/user-api'
@@ -14,6 +15,7 @@ import { i18n } from '/@/i18n'
 import { getCurrentUser, getCurrentWorkspaceId } from '/@/utils/token'
 
 const editUser = ref<InstanceType<typeof EditUser> | null>(null)
+const editPassword = ref<InstanceType<typeof EditPassword> | null>(null)
 const condition = reactive<IQueryParam>({
   name: '',
   pageNumber: 1,
@@ -26,7 +28,7 @@ const columns: DataTableColumns<IUser> = [
   {
     title: i18n.t('commons.name'),
     key: 'name',
-    maxWidth: 200,
+    width: 200,
   },
   {
     title: i18n.t('commons.group'),
@@ -39,6 +41,7 @@ const columns: DataTableColumns<IUser> = [
     title: i18n.t('commons.email'),
     key: 'email',
     align: 'center',
+    width: 210,
   },
   {
     title: i18n.t('commons.status'),
@@ -78,6 +81,7 @@ const columns: DataTableColumns<IUser> = [
                 icon: 'i-carbon:password',
                 type: 'success',
                 permission: ['SYSTEM_USER:READ+EDIT_PASSWORD'],
+                onExec: () => handleEditPassword(row),
               },
               {},
             )
@@ -133,6 +137,7 @@ const handleEdit = (val: IUser) => {
 const handleChangeStatus = (value: boolean) => {
   window.$message.info(`Update value: ${value}`)
 }
+const handleEditPassword = (record: IUser) => editPassword.value?.open(record)
 const handlePrevPage = (val: number) => {
   pageSize.value = val
 }
@@ -157,6 +162,7 @@ onMounted(() => {
     </n-card>
   </n-spin>
   <edit-user ref="editUser" @refresh="loadTableData" />
+  <edit-password ref="editPassword" @refresh="loadTableData" />
 </template>
 
 <style scoped></style>
