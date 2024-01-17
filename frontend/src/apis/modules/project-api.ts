@@ -2,7 +2,7 @@ import { IPageResponse, IQueryParam } from '../interface'
 import { IUser, IUserDto } from './user-api'
 import http from '/@/plugins/alova'
 
-export interface IProject {
+export interface IProject extends Record<string, unknown> {
   id: string
   name: string
   description: string
@@ -32,7 +32,9 @@ export const saveProject = (params: IProject) => {
 export const modifyProject = (params: IProject) => {
   return http.Put('/project/update', params)
 }
-
+export const delProjectById = (params: string) => {
+  return http.Delete(`/project/remove/${params}`)
+}
 export const getProjectList = () => http.Get<Array<IProject>>(`/project/list`)
 
 export const getUserProjectList = (param: { userId: string; workspaceId: string }) =>

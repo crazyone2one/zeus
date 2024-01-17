@@ -1,12 +1,14 @@
 <script setup lang="ts">
 import { usePagination } from '@alova/scene-vue'
+import { useRequest } from 'alova'
 import { DataTableColumns, DataTableRowKey, NButton } from 'naive-ui'
 import { computed, h, onMounted, reactive, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import EditProject from './EditProject.vue'
 import ProjectMember from './ProjectMember.vue'
 import { IPageResponse, IQueryParam } from '/@/apis/interface'
-import { IProject, getProjectPages } from '/@/apis/modules/project-api'
+import { IProject, delProjectById, getProjectPages } from '/@/apis/modules/project-api'
+import NDeleteConfirm from '/@/components/NDeleteConfirm.vue'
 import NPagination from '/@/components/NPagination.vue'
 import NTableHeader from '/@/components/NTableHeader.vue'
 import NTableOperator from '/@/components/NTableOperator.vue'
@@ -19,6 +21,7 @@ const route = useRoute()
 const router = useRouter()
 const editProject = ref<InstanceType<typeof EditProject> | null>(null)
 const projectMember = ref<InstanceType<typeof ProjectMember> | null>(null)
+const deleteConfirm = ref<InstanceType<typeof NDeleteConfirm> | null>(null)
 const condition = reactive<IQueryParam>({
   name: '',
   pageNumber: 1,
@@ -58,6 +61,7 @@ const columns: DataTableColumns<IProject> = [
         NTableOperator,
         {
           onEditClick: () => handleEdit(row),
+          onDeleteClick: () => handleDelete(row),
           editPermission: ['SYSTEM_USER:READ+EDIT'],
           deletePermission: ['SYSTEM_USER:READ+DELETE'],
           showDelete: workspaceId.value !== row.id,
@@ -119,6 +123,29 @@ const handlePrevPage = (val: number) => {
 const handleCellClick = (val: IProject) => {
   projectMember.value?.open(val)
 }
+const handleDelete = (record: IProject) => {
+  deleteConfirm.value?.open(record)
+}
+const { send: deleteProject, loading: deleteLoad } = useRequest((pId) => delProjectById(pId), {
+  immediate: false,
+})
+const _handleDelete = (record: IProject) => {
+  window.$dialog.warning({
+    title: '警告',
+    content: i18n.t('project.delete_tip'),
+    positiveText: i18n.t('commons.confirm'),
+    negativeText: i18n.t('commons.cancel'),
+    onPositiveClick: () => {
+      deleteProject(record.id).then(() => {
+        window.$message.success(i18n.t('commons.delete_success'))
+        handleList()
+      })
+    },
+    onNegativeClick: () => {
+      window.$message.info(i18n.t('commons.remove_cancel'))
+    },
+  })
+}
 onMounted(() => {
   if (route.path.split('/')[1] === 'project' && route.path.split('/')[2] === 'create') {
     router.replace({ path: '/project/all' })
@@ -135,7 +162,7 @@ onMounted(() => {
 })
 </script>
 <template>
-  <n-spin :show="loading">
+  <n-spin :show="loading || deleteLoad">
     <n-card>
       <template #header>
         <n-table-header
@@ -152,6 +179,7 @@ onMounted(() => {
   </n-spin>
   <edit-project ref="editProject" @refresh="handleList" />
   <project-member ref="projectMember" @refresh="handleList" />
+  <n-delete-confirm ref="deleteConfirm" :title="$t('project.delete')" @delete="_handleDelete" />
 </template>
 
 <style scoped></style>
