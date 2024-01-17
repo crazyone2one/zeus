@@ -31,7 +31,7 @@ const changeWs = (value: string, option: SelectOption) => {
 const _changeWs = (wsId: string) => {
   if (wsId) {
     switchWs(wsId).then((res: IUserDto) => {
-      emitter.emit('projectChange')
+      emitter.emit('projectChange', wsId)
       userStore.switchWorkspace(res)
     })
   }
