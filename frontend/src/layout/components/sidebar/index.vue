@@ -16,9 +16,8 @@ const menuOptions: MenuOption[] = [
       }),
   },
   {
-    label: i18n.t('test_track.test_track'),
+    label: () => h(RouterLink, { to: { path: '/track' } }, { default: () => i18n.t('test_track.test_track') }),
     key: 'test_track',
-    disabled: true,
     icon: () =>
       h(NIcon, null, {
         default: () => h('span', { class: 'i-my-icons-track' }),

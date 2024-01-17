@@ -58,9 +58,6 @@ public class CustomFieldServiceImpl extends ServiceImpl<CustomFieldMapper, Custo
     @Override
     public Page<CustomField> getPage(QueryCustomFieldRequest page) {
         QueryChain<CustomField> queryChain = queryChain(page);
-        System.out.println("[[[[[");
-        System.out.println(queryChain.toSQL());
-        System.out.println("[[[[[");
         return mapper.paginate(Page.of(page.getPageNumber(), page.getPageSize()), queryChain);
     }
 

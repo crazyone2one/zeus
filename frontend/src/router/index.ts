@@ -2,11 +2,12 @@ import { RouteRecordRaw, createRouter, createWebHashHistory } from 'vue-router'
 import { i18n } from '../i18n'
 import Project from './modules/project-manage'
 import Setting from './modules/setting-router'
+import Track from './modules/test-track'
 import { useAuthStore } from '/@/store/modules/auth-store'
 
 // Define some routes
 const routes: RouteRecordRaw[] = [
-  { path: '/', component: () => import(`/@/layout/index.vue`), children: [...Setting, ...Project] },
+  { path: '/', component: () => import(`/@/layout/index.vue`), children: [...Setting, ...Project, ...Track] },
   {
     path: '/login',
     name: 'login',

@@ -26,6 +26,12 @@ const Project: Array<RouteRecordRaw> = [
         name: 'projectTemplate',
         component: () => import(`/@/views/project-manage/template/index.vue`),
       },
+      { path: 'node', name: 'projectNode', component: () => import('/@/views/project-manage/node/index.vue') },
+      {
+        path: 'testCaseNode',
+        name: 'testCaseNode',
+        component: () => import(`/@/views/test-track/modules/TestCaseNodePage.vue`),
+      },
     ],
   },
 ]

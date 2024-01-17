@@ -2,9 +2,9 @@
 import { MenuOption, NMenu, NSplit } from 'naive-ui'
 import { h, onMounted, ref } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
-import ProjectSwitch from '../components/ProjectSwitch.vue'
 import { i18n } from '/@/i18n'
 import { hasPermission } from '/@/utils/permission'
+import ProjectSwitch from '/@/views/project-manage/components/ProjectSwitch.vue'
 
 const route = useRoute()
 const showMenu = ref(true)
@@ -89,10 +89,30 @@ const menuOptions: MenuOption[] = [
     disabled: true,
   },
   {
-    label: i18n.t('project.log'),
-    key: 'dance-dance-dance',
-    show: showMenu.value,
-    disabled: true,
+    label: () =>
+      h(
+        RouterLink,
+        {
+          to: {
+            name: 'testCaseNode',
+          },
+        },
+        { default: () => '【测试用例】节点管理' },
+      ),
+    key: 'testCaseNode',
+  },
+  {
+    label: () =>
+      h(
+        RouterLink,
+        {
+          to: {
+            name: 'projectNode',
+          },
+        },
+        { default: () => '【测试计划】节点管理' },
+      ),
+    key: 'projectNode',
   },
 ]
 onMounted(() => {

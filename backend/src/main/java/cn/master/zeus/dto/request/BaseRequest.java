@@ -3,6 +3,7 @@ package cn.master.zeus.dto.request;
 import lombok.Data;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author Created by 11's papa on 01/03/2024
@@ -24,4 +25,21 @@ public class BaseRequest {
      * 排除哪些id
      */
     private List<String> notInIds;
+    /**
+     * 版本来源字段
+     */
+    private String refId;
+
+    /**
+     * 过滤条件
+     */
+    private Map<String, List<String>> filters;
+    /**
+     * 状态不等于 notEqStatus
+     */
+    private String notEqStatus;
+    /**
+     * 高级搜索
+     */
+    private Map<String, Object> combine;
 }

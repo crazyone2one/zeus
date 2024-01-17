@@ -128,7 +128,7 @@ public class SystemGroupServiceImpl extends ServiceImpl<SystemGroupMapper, Syste
 
     @Override
     public List<SystemGroup> getProjectMemberGroups(String projectId, String userId) {
-        return queryChain().select(SYSTEM_GROUP.ID, SYSTEM_GROUP.NAME)
+        return queryChain()
                 .from(PROJECT)
                 .join(USER_GROUP).on(USER_GROUP.SOURCE_ID.eq(PROJECT.ID))
                 .join(SYSTEM_GROUP).on(SYSTEM_GROUP.ID.eq(USER_GROUP.GROUP_ID))
