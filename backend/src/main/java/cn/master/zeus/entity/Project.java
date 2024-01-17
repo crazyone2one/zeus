@@ -50,11 +50,13 @@ public class Project implements Serializable {
     /**
      * Create timestamp
      */
+    @Column(onInsertValue = "now()")
     private LocalDateTime createTime;
 
     /**
      * Update timestamp
      */
+    @Column(onInsertValue = "now()", onUpdateValue = "now()")
     private LocalDateTime updateTime;
 
     /**
