@@ -20,12 +20,13 @@ const userId = computed(() => {
 const { send: loadProject } = useRequest((url) => getUserProjectList(url), { immediate: false })
 const { send: sw } = useRequest((param) => switchProject(param), { immediate: false })
 const changeWs = (value: string) => {
+  console.log(`output->value`, value)
   let currentProjectId = getCurrentProjectId()
   if (value === currentProjectId) {
     return
   }
   sw({ id: userId.value, lastProjectId: value }).then((res) => {
-    sessionStorage.setItem('projectId', res.lastProjectId)
+    sessionStorage.setItem('project_id', res.lastProjectId)
     // TODO emit
     // reloadPage()
     changeProjectName(value)
