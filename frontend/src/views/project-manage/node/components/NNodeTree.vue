@@ -57,7 +57,7 @@ const nodeProps = ({ option }: { option: ITestPlanNode | TreeOption }) => {
     <slot name="header"></slot>
     <n-spin :show="loading">
       <n-space vertical :size="12">
-        <n-input v-model:value="pattern" placeholder="搜索" />
+        <n-input v-model:value="pattern" placeholder="搜索" clearable />
         <n-switch v-model:value="showIrrelevantNodes">
           <template #checked> 展示搜索无关的节点 </template>
           <template #unchecked> 隐藏搜索无关的节点 </template>

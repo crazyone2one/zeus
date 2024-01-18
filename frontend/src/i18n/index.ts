@@ -2,6 +2,8 @@ import { createI18n } from 'vue-i18n'
 import pinia from '../store'
 import en_US from './locales/en_US'
 import zh_CN from './locales/zh_CN'
+import track_en from '/@/i18n/modules/track/en_US.ts'
+import track_cn from '/@/i18n/modules/track/zh_CN.ts'
 import { useSettingStore } from '/@/store/modules/setting-store'
 
 const getLocale = (): string => {
@@ -15,9 +17,11 @@ const instance = createI18n({
   messages: {
     ['zh-cn']: {
       ...zh_CN,
+      ...track_cn
     },
     ['en']: {
       ...en_US,
+      ...track_en
     },
   },
   locale: getLocale(), // set locale

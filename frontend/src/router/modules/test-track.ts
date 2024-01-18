@@ -11,11 +11,11 @@ const Track: Array<RouteRecordRaw> = [
         name: 'trackHome',
         component: () => import(`/@/views/test-track/home/index.vue`),
       },
-      // {
-      //   path: 'case/create',
-      //   name: 'testCaseCreate',
-      //   component: () => import('@/business/case/components/TestCaseEdit'),
-      // },
+      {
+        path: 'case/create',
+        name: 'testCaseCreate',
+        component: () => import('/@/views/test-track/case/components/TestCaseEdit.vue'),
+      },
       {
         path: 'case/:projectId',
         name: 'testCase',

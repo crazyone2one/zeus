@@ -1,14 +1,14 @@
 package cn.master.zeus.service.impl;
 
 import cn.master.zeus.common.constants.UserGroupConstants;
+import cn.master.zeus.common.enums.ProjectApplicationType;
 import cn.master.zeus.common.exception.BusinessException;
 import cn.master.zeus.dto.WorkspaceMemberDTO;
 import cn.master.zeus.dto.request.project.ProjectRequest;
-import cn.master.zeus.entity.Project;
-import cn.master.zeus.entity.SystemGroup;
-import cn.master.zeus.entity.SystemUser;
-import cn.master.zeus.entity.UserGroup;
+import cn.master.zeus.entity.*;
+import cn.master.zeus.mapper.ProjectApplicationMapper;
 import cn.master.zeus.mapper.ProjectMapper;
+import cn.master.zeus.mapper.ProjectVersionMapper;
 import cn.master.zeus.mapper.UserGroupMapper;
 import cn.master.zeus.service.IProjectService;
 import cn.master.zeus.service.ISystemGroupService;
@@ -25,9 +25,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import static cn.master.zeus.entity.table.ProjectTableDef.PROJECT;
+import static cn.master.zeus.entity.table.ProjectVersionTableDef.PROJECT_VERSION;
 import static cn.master.zeus.entity.table.SystemGroupTableDef.SYSTEM_GROUP;
 import static cn.master.zeus.entity.table.SystemUserTableDef.SYSTEM_USER;
 import static cn.master.zeus.entity.table.UserGroupTableDef.USER_GROUP;
@@ -45,6 +47,8 @@ import static com.mybatisflex.core.query.QueryMethods.max;
 public class ProjectServiceImpl extends ServiceImpl<ProjectMapper, Project> implements IProjectService {
     private final UserGroupMapper userGroupMapper;
     private final ISystemGroupService systemGroupService;
+    private final ProjectVersionMapper projectVersionMapper;
+    private final ProjectApplicationMapper projectApplicationMapper;
 
     @Override
     public Page<Project> getProjectPage(ProjectRequest request) {
@@ -79,7 +83,42 @@ public class ProjectServiceImpl extends ServiceImpl<ProjectMapper, Project> impl
         UserGroup userGroup = UserGroup.builder().userId(userId).groupId(UserGroupConstants.PROJECT_ADMIN).sourceId(project.getId()).build();
         userGroupMapper.insert(userGroup);
         updateLastProjectIdIfNull(project.getId(), userId);
+        // 创建默认版本
+        addProjectVersion(project);
+        // 初始化项目应用管理
+        initProjectApplication(project.getId());
         return project;
+    }
+
+    private void initProjectApplication(String id) {
+        ProjectApplication build = ProjectApplication.builder().projectId(id)
+                .type(ProjectApplicationType.TRACK_SHARE_REPORT_TIME.toString())
+                .typeValue("24H").build();
+        projectApplicationMapper.insert(build);
+        build.setType(ProjectApplicationType.PERFORMANCE_SHARE_REPORT_TIME.toString());
+        projectApplicationMapper.insert(build);
+        build.setType(ProjectApplicationType.API_SHARE_REPORT_TIME.toString());
+        projectApplicationMapper.insert(build);
+        build.setType(ProjectApplicationType.UI_SHARE_REPORT_TIME.toString());
+        projectApplicationMapper.insert(build);
+        build.setType(ProjectApplicationType.CASE_CUSTOM_NUM.toString());
+        build.setTypeValue(Boolean.FALSE.toString());
+        projectApplicationMapper.insert(build);
+    }
+
+    private void addProjectVersion(Project project) {
+        ProjectVersion projectVersion = ProjectVersion.builder().name("v1.0.0").projectId(project.getId())
+                .publishTime(LocalDateTime.now())
+                .startTime(LocalDateTime.now())
+                .createUser(SessionUtils.getUserId())
+                .latest(true).status("open")
+                .build();
+        boolean exists = QueryChain.of(ProjectVersion.class).where(PROJECT_VERSION.PROJECT_ID.eq(project.getId())
+                .and(PROJECT_VERSION.NAME.eq(projectVersion.getName()))).exists();
+        if (exists) {
+            BusinessException.throwException("当前版本已经存在");
+        }
+        projectVersionMapper.insert(projectVersion);
     }
 
     @Override

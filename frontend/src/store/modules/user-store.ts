@@ -1,5 +1,7 @@
+import { TreeOption } from 'naive-ui'
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
+import { ITestCaseNode } from '/@/apis/modules/test-case-api'
 import { IUserDto } from '/@/apis/modules/user-api'
 
 // You can name the return value of `defineStore()` anything you want,
@@ -10,6 +12,9 @@ export const useUserStore = defineStore(
   'user',
   () => {
     const user = ref<IUserDto>({} as IUserDto)
+    const testCaseSelectNode = ref<ITestCaseNode>({} as ITestCaseNode)
+    const testCaseSelectNodeIds = ref<Array<string>>([])
+    const testCaseModuleOptions = ref<Array<TreeOption>>([])
     const saveSessionStorage = (user: IUserDto): void => {
       // 校验权限
       user.userGroups?.forEach((ug) => {
@@ -51,7 +56,15 @@ export const useUserStore = defineStore(
       sessionStorage.setItem('workspace_id', resp.lastWorkspaceId)
       sessionStorage.setItem('project_id', resp.lastProjectId)
     }
-    return { user, saveSessionStorage, initUser, switchWorkspace }
+    return {
+      user,
+      testCaseSelectNode,
+      testCaseSelectNodeIds,
+      testCaseModuleOptions,
+      saveSessionStorage,
+      initUser,
+      switchWorkspace,
+    }
   },
   { persist: true },
 )

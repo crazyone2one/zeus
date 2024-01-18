@@ -1,5 +1,6 @@
 package cn.master.zeus.entity;
 
+import com.mybatisflex.annotation.Column;
 import com.mybatisflex.annotation.Id;
 import com.mybatisflex.annotation.Table;
 import java.io.Serializable;
@@ -40,7 +41,7 @@ public class ProjectVersion implements Serializable {
     private LocalDateTime startTime;
 
     private LocalDateTime endTime;
-
+    @Column(onInsertValue = "now()")
     private LocalDateTime createTime;
 
     private String createUser;

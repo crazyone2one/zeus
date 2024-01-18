@@ -137,7 +137,7 @@ onMounted(() => {
               @create="handleCreate"
             />
           </template>
-          <n-data-table :key="(row: ITestPlanNode) => row.id" :columns="columns" :data="data" />
+          <n-data-table :row-key="(row: ITestPlanNode) => row.id" :columns="columns" :data="data" />
           <n-pagination :total="total" :page-size="pageSize" :page="page" @update:page-size="handlePrevPage" />
         </n-card>
       </n-spin>

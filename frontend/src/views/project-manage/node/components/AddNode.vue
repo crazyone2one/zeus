@@ -1,14 +1,13 @@
 <script setup lang="ts">
 import { useForm } from '@alova/scene-vue'
 import { useRequest } from 'alova'
-import { FormInst, NInputNumber, NSpin, NTreeSelect, TreeOption, TreeSelectOption } from 'naive-ui'
+import { FormInst, NInputNumber, NSpin, NTreeSelect, TreeSelectOption } from 'naive-ui'
 import { computed, ref } from 'vue'
 import { getTestCaseNodesByCaseFilter, testCaseNodeAdd, testCaseNodeEdit } from '/@/apis/modules/test-case-api'
 import { ITestPlanNode, editPlanNode, getTestPlanNodes, savePlanNode } from '/@/apis/modules/test-plan-node-api'
 import NModalDialog from '/@/components/NModalDialog.vue'
 import { i18n } from '/@/i18n'
 import { getCurrentProjectId } from '/@/utils/token'
-import { buildTestPlanNodeTree } from '/@/utils/tree'
 interface IProp {
   type?: string
 }
@@ -53,28 +52,39 @@ const emit = defineEmits(['refresh'])
 const projectId = computed(() => {
   return getCurrentProjectId()
 })
+const buildTree = (data: ITestPlanNode[]) => {
+  if (data) {
+    data.forEach((item) => {
+      item.key = item.id
+      item.label = item.name
+      if (item.children && item.children.length > 0) {
+        buildTree(item.children)
+      }
+    })
+  }
+  return data
+}
 const open = (data?: ITestPlanNode) => {
   parentOptions.value = []
-  sendTreeData(projectId.value).then((res) => buildTestPlanNodeTree(res, parentOptions.value))
+  sendTreeData(projectId.value).then((res) => (parentOptions.value = buildTree(res)))
   modalDialog.value?.show()
   if (data) {
-    const level = buildNodeLevel(data)
     model.value.parentId = data.id
     model.value.level = data.level + 1
     model.value.name = ''
   }
 }
-const buildNodeLevel = (node: TreeOption) => {
-  if (node.children) {
-    let level: number = node.level as number
-    const level_arr: Array<number> = node.children.map((item) => item.level as number)
-    const tmp = Math.max(...level_arr)
-    level = tmp + 1
-    node.children.forEach((child) => buildNodeLevel(child))
-    return level
-  }
-  return (node.level as number) + 1
-}
+// const buildNodeLevel = (node: TreeOption) => {
+//   if (node.children) {
+//     let level: number = node.level as number
+//     const level_arr: Array<number> = node.children.map((item) => item.level as number)
+//     const tmp = Math.max(...level_arr)
+//     level = tmp + 1
+//     node.children.forEach((child) => buildNodeLevel(child))
+//     return level
+//   }
+//   return (node.level as number) + 1
+// }
 const handleSave = () => {
   model.value.projectId = projectId.value
   submit().then(() => {

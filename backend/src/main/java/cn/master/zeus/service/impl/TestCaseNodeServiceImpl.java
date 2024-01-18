@@ -17,6 +17,7 @@ import com.mybatisflex.core.paginate.Page;
 import com.mybatisflex.core.query.QueryChain;
 import com.mybatisflex.core.query.QueryMethods;
 import com.mybatisflex.core.query.QueryWrapper;
+import com.mybatisflex.core.relation.RelationManager;
 import com.mybatisflex.core.update.UpdateChain;
 import com.mybatisflex.spring.service.impl.ServiceImpl;
 import lombok.RequiredArgsConstructor;
@@ -53,7 +54,7 @@ public class TestCaseNodeServiceImpl extends ServiceImpl<TestCaseNodeMapper, Tes
     @Override
     public List<TestCaseNode> getNodeTreeByProjectId(String projectId) {
         QueryWrapper qw = QueryWrapper.create()
-                .where(TEST_CASE_NODE.PROJECT_ID.eq(projectId))
+                .where(TEST_CASE_NODE.PROJECT_ID.eq(projectId).and(TEST_CASE_NODE.PARENT_ID.isNull()))
                 .orderBy(TEST_CASE_NODE.POS.asc());
         return mapper.selectListWithRelationsByQuery(qw);
     }
@@ -65,8 +66,10 @@ public class TestCaseNodeServiceImpl extends ServiceImpl<TestCaseNodeMapper, Tes
         checkDefaultNode(projectId);
         List<TestCaseNode> countNodes = getCountNodes(request);
         QueryWrapper qw = QueryWrapper.create()
-                .where(TEST_CASE_NODE.PROJECT_ID.eq(projectId))
+                .where(TEST_CASE_NODE.PROJECT_ID.eq(projectId).and(TEST_CASE_NODE.PARENT_ID.isNull()))
                 .orderBy(TEST_CASE_NODE.POS.asc());
+        // 默认的递归查询深度为 3 个层级,设置递归查询深度为 10 层
+        RelationManager.setMaxDepth(10);
         List<TestCaseNode> testCaseNodes = mapper.selectListWithRelationsByQuery(qw);
         return buildTreeService.getTestCaseNodeTrees(testCaseNodes, buildTreeService.getCountMap(countNodes));
     }
@@ -114,9 +117,11 @@ public class TestCaseNodeServiceImpl extends ServiceImpl<TestCaseNodeMapper, Tes
     public Page<TestCaseNode> pageNode(QueryTestCaseRequest request) {
         // 判断当前项目下是否有默认模块，没有添加默认模块
         checkDefaultNode(request.getProjectId());
-        QueryWrapper qw = QueryWrapper.create()
-                .where(TEST_CASE_NODE.PROJECT_ID.eq(request.getProjectId()))
+        QueryWrapper qw = QueryWrapper.create().from(TestCaseNode.class)
+                .where(TEST_CASE_NODE.PROJECT_ID.eq(request.getProjectId()).and(TEST_CASE_NODE.PARENT_ID.isNull()))
                 .orderBy(TEST_CASE_NODE.POS.asc());
+        // 默认的递归查询深度为 3 个层级,设置递归查询深度为 10 层
+        RelationManager.setMaxDepth(10);
         return mapper.paginateWithRelations(Page.of(request.getPageNumber(), request.getPageSize()), qw);
     }
 
@@ -127,6 +132,7 @@ public class TestCaseNodeServiceImpl extends ServiceImpl<TestCaseNodeMapper, Tes
         node.setCreateUser(SessionUtils.getUserId());
         double pos = getNextLevelPos(node.getProjectId(), node.getLevel(), node.getParentId());
         node.setPos(pos);
+        node.setParentId(StringUtils.isBlank(node.getParentId()) ? null : node.getParentId());
         mapper.insert(node);
         return node.getId();
     }
@@ -145,13 +151,13 @@ public class TestCaseNodeServiceImpl extends ServiceImpl<TestCaseNodeMapper, Tes
 
     private void deleteTestCaseToGcBatch(List<String> ids) {
         // test-plan-test-case
-        UpdateChain.of(TestPlanTestCase.class).set(TestPlanTestCase::getIsDel,true).where(TEST_PLAN_TEST_CASE.ID.in(ids)).update();
+        UpdateChain.of(TestPlanTestCase.class).set(TestPlanTestCase::getIsDel, true).where(TEST_PLAN_TEST_CASE.ID.in(ids)).update();
         // test_case_review_test_case
-        UpdateChain.of(TestCaseReviewTestCase.class).set(TestCaseReviewTestCase::getIsDel,true).where(TEST_CASE_REVIEW_TEST_CASE.ID.in(ids)).update();
+        UpdateChain.of(TestCaseReviewTestCase.class).set(TestCaseReviewTestCase::getIsDel, true).where(TEST_CASE_REVIEW_TEST_CASE.ID.in(ids)).update();
         // test case
-        UpdateChain.of(TestCase.class).set(TestCase::getStatus,"Trash")
-                .set(TestCase::getDeleteTime,LocalDateTime.now())
-                .set(TestCase::getDeleteUserId,SessionUtils.getUserId())
+        UpdateChain.of(TestCase.class).set(TestCase::getStatus, "Trash")
+                .set(TestCase::getDeleteTime, LocalDateTime.now())
+                .set(TestCase::getDeleteUserId, SessionUtils.getUserId())
                 .where(TEST_CASE.REF_ID.in(QueryChain.of(TestCase.class).select(TEST_CASE.REF_ID)))
                 .update();
     }

@@ -17,6 +17,10 @@ export interface ITestCaseNode extends TreeOption {
   caseNum?: number
   parent?: ITestCaseNode
 }
+export interface ITestCase {
+  id: string
+  name: string
+}
 /**
  * 查询用例模块节点列表数据
  * @param projectId
@@ -40,3 +44,14 @@ export const getTestCaseNodePage = (page: number, pageSize: number, params: IQue
 
 export const testCaseNodeAdd = (param: ITestCaseNode) => http.Post('/case/node/save', param)
 export const testCaseNodeEdit = (param: ITestCaseNode) => http.Post('/case/node/update', param)
+
+/**
+ * 查询测试用例列表数据
+ * @param param
+ * @returns
+ */
+export const testCaseList = (page: number, pageSize: number, params: IQueryParam) => {
+  params.pageNumber = page
+  params.pageSize = pageSize
+  return http.Post<IPageResponse<ITestCase>>('/test/case/page', params)
+}

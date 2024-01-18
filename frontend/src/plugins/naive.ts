@@ -20,9 +20,11 @@ import {
   NSpin,
   NSwitch,
   NTooltip,
+  NTabs,
+  NTabPane,
   // create naive ui
   create,
-} from "naive-ui";
+} from 'naive-ui'
 
 const naive = create({
   components: [
@@ -46,7 +48,9 @@ const naive = create({
     NFormItemRow,
     NCard,
     NPopselect,
+    NTabs,
+    NTabPane,
   ],
-});
+})
 
-export default naive;
+export default naive
